@@ -7,6 +7,8 @@ open System.Threading.Tasks
 open Microsoft.AspNetCore.Mvc
 open Microsoft.Extensions.Logging
 open fsharpintegrationtests
+open System.Threading.Tasks
+open System.Net.Http
 
 [<ApiController>]
 [<Route("[controller]")>]
@@ -36,3 +38,22 @@ type WeatherForecastController (logger : ILogger<WeatherForecastController>) =
                   TemperatureC = rng.Next(-20,55)
                   Summary = summaries.[rng.Next(summaries.Length)] }
         |]
+
+
+[<ApiController>]
+[<Route("[controller]")>]
+type HelloController (logger : ILogger<WeatherForecastController>, httpClientFactory: IHttpClientFactory) =
+
+    inherit ControllerBase()
+    [<HttpGet>]
+    member _.GetAsync() =
+        task {
+
+            let httpClient = httpClientFactory.CreateClient()
+
+            let! res = httpClient.GetAsync("externalApi")
+
+            res.EnsureSuccessStatusCode() |> ignore
+
+            return! res.Content.ReadAsStringAsync()
+        }
