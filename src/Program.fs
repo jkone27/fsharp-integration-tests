@@ -26,8 +26,12 @@ type Startup(configuration: IConfiguration, env: IWebHostEnvironment) =
 
         services.AddControllers()
 
-        services.AddHttpClient(fun httpClient ->
-            httpClient.BaseAddress <- new Uri("https://www.google.com/")
+        //make sure this is not the generic one
+        services.AddHttpClient("externalApiClient",
+            configureClient = fun httpClient ->
+                //generate your public request bin and replace here
+                httpClient.BaseAddress <- new Uri("https://enfir17jla5z.x.pipedream.net/")
+                ()
         )
 
         services.AddEndpointsApiExplorer()
