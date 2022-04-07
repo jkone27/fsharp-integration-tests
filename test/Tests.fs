@@ -178,17 +178,41 @@ module CE =
             delegatingHandlers.Add(new MockClientHandler(methods, templateMatcher.Value, stub))
             this
 
+        [<CustomOperation("stub")>]
+        member this.Stub2(x, methods, routeTemplate, stub: HttpResponseMessage) =
+            this.Stub(x, methods, routeTemplate, fun _ _ -> stub)
+
+        [<CustomOperation("stubs")>]
+        member this.StubString(x, methods, routeTemplate, stub: string) =
+            this.Stub2(x, methods, routeTemplate, stub |> R_OK)
+
+        [<CustomOperation("stubj")>]
+        member this.StubJson(x, methods, routeTemplate, stub) =
+            this.Stub2(x, methods, routeTemplate, stub |> R_JSON)
+
         [<CustomOperation("GET")>]
         member this.Get(x, route, stub) =
             this.Stub(x, [|HttpMethod.Get|], route, stub)
+
+        [<CustomOperation("GETJ")>]
+        member this.GetJson(x, route, stub) =
+            this.StubJson(x, [|HttpMethod.Get|], route, stub)
 
         [<CustomOperation("POST")>]
         member this.Post(x, route, stub) =
             this.Stub(x, [|HttpMethod.Post|], route, stub)
 
+        [<CustomOperation("POSTJ")>]
+        member this.PostJson(x, route, stub) =
+            this.StubJson(x, [|HttpMethod.Post|], route, stub)
+
         [<CustomOperation("PUT")>]
         member this.Put(x, route, stub) =
             this.Stub(x, [|HttpMethod.Put|], route, stub)
+
+        [<CustomOperation("PUTJ")>]
+        member this.PutJson(x, route, stub) =
+            this.StubJson(x, [|HttpMethod.Put|], route, stub)
 
         [<CustomOperation("DELETE")>]
         member this.Delete(x, route, stub) =
@@ -279,7 +303,7 @@ module Tests =
 
             let testApp =
                 test_stubbery () { 
-                    stub [|HttpMethod.Get|] "/externalApi" (fun r args -> {| Ok = "yeah" |} |> box)
+                    GET "/externalApi" (fun r args -> {| Ok = "yeah" |} |> box)
                 }
 
             use client = testApp.CreateTestClient()
@@ -319,7 +343,10 @@ module Tests =
 
             let testApp =
                 test () { 
-                    stub [|HttpMethod.Get|] "/externalApi" (fun _ _ -> {| Ok = "yeah" |} |> R_JSON)
+                    GETJ "/externalApi" {| Ok = "yeah" |}
+                    POST "/notUsed" (fun _ _ -> "ok" |> R_OK)
+                    POST "/notUsed2" (fun _ _ -> "ok" |> R_OK)
+                    POST "/errRoute" (fun _ _ -> R_ERROR HttpStatusCode.NotAcceptable ("err" |> StringContent))
                 }
 
             use client = testApp.CreateTestClient()
@@ -341,7 +368,9 @@ module Tests =
 
             let testApp =
                 test () { 
-                    GET "/externalApi" (fun _ _ -> expected |> R_JSON)
+                    GETJ "/notUsed" expected
+                    GETJ "/externalApi" expected
+                    POSTJ "/notUsed" expected
                 }
 
             use client = testApp.CreateTestClient()
