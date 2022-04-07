@@ -14,10 +14,13 @@ open Microsoft.Extensions.Http
 open Microsoft.AspNetCore.Routing.Template
 open Microsoft.AspNetCore.Routing.Patterns
 open Microsoft.AspNetCore.Routing
+open System.Net
+open System.Text.Json
 
 type MyOpenapi = OpenApiClientProvider<"swagger.json">
 
 module CE =
+    open System.Net.Http.Json
 
     type MutableUri = { mutable MockUri: Uri }
 
@@ -37,7 +40,7 @@ module CE =
             if this.WithBuilder(builder) then
                 ``base``.ConfigureWebHost(builder)
 
-    type TestClient<'T when 'T: not struct>() as this =
+    type TestStubberyClient<'T when 'T: not struct>() as this =
 
         let factory = new TestFactory<'T>()
         let stubbery = new Stubbery.ApiStub()
@@ -112,33 +115,37 @@ module CE =
                         stubbery.Dispose()
 
 
-    type MockClientHandler(methods, routeTemplate: string, responseStubber) as this = 
+    type MockClientHandler(methods, templateMatcher: TemplateMatcher, responseStubber) as this = 
         inherit DelegatingHandler()
 
         override this.SendAsync(request, token) =
-            let templateMatcher = 
-                try
-                    let p = RoutePatternFactory.Parse(routeTemplate)
-                    let t = RouteTemplate(p)
-                    let tm = new TemplateMatcher(t, [] |> RouteValueDictionary)
-                    Some(tm)
-                with _ ->
-                    None
+            let routeDict = new RouteValueDictionary()
             if methods |> Array.contains(request.Method) |> not then
                 base.SendAsync(request, token)
-            else if templateMatcher.IsNone then
-                failwith $"unable to match route for {routeTemplate}"
-            else if templateMatcher.Value.TryMatch(request.RequestUri.PathAndQuery, [] |> RouteValueDictionary) |> not then
+            else if templateMatcher.TryMatch(request.RequestUri.PathAndQuery, routeDict) |> not then
                 base.SendAsync(request, token)
             else
-                responseStubber request
+                responseStubber request routeDict
                 |> Task.FromResult
                 
+    let inline R_OK (x: string) =
+        let response = new HttpResponseMessage(HttpStatusCode.OK)
+        response.Content <- new StringContent(x, Text.Encoding.UTF8, "application/json")
+        response
 
-    type TestClient2<'T when 'T: not struct>() as this =
+    let inline R_JSON x =
+        let response = new HttpResponseMessage(HttpStatusCode.OK)
+        response.Content <- JsonContent.Create(x)
+        response
+
+    let inline R_ERROR statusCode content =
+        let response = new HttpResponseMessage(statusCode)
+        response.Content <- content
+        response
+
+    type TestClient<'T when 'T: not struct>() as this =
 
         let factory = new TestFactory<'T>()
-        let uri = { MockUri = null }
         let delegatingHandlers = new ResizeArray<DelegatingHandler>()
 
         member this.Yield(()) = (factory, delegatingHandlers)
@@ -154,8 +161,21 @@ module CE =
             this
 
         [<CustomOperation("stub")>]
-        member this.Stub(_, methods, route, stub: HttpRequestMessage -> HttpResponseMessage) =
-            delegatingHandlers.Add(new MockClientHandler(methods, route, stub))
+        member this.Stub(_, methods, routeTemplate, stub: HttpRequestMessage -> RouteValueDictionary -> HttpResponseMessage) =
+            
+            let routeValueDict = new RouteValueDictionary()
+            let templateMatcher = 
+                try
+                    let rt = TemplateParser.Parse(routeTemplate)
+                    let tm = new TemplateMatcher(rt, routeValueDict)
+                    Some(tm)
+                with _ ->
+                    None
+
+            if templateMatcher.IsNone then
+                failwith $"stub: error parsing route template for {routeTemplate}"
+
+            delegatingHandlers.Add(new MockClientHandler(methods, templateMatcher.Value, stub))
             this
 
         [<CustomOperation("GET")>]
@@ -197,10 +217,10 @@ module CE =
 
 
     // CE builder
-    let test = new TestClient<Startup>()
+    let test_stubbery = new TestStubberyClient<Startup>()
 
     //CE Builder without stubbery
-    let test2 = new TestClient<Startup>()
+    let test = new TestClient<Startup>()
 
 module Tests =
 
@@ -253,13 +273,53 @@ module Tests =
             }
             
     [<Fact>]
+    let ``test stubbery with extension works`` () =
+
+        task {
+
+            let testApp =
+                test_stubbery { 
+                    stub [|HttpMethod.Get|] "/externalApi" (fun r args -> {| Ok = "yeah" |} |> box)
+                }
+
+            use client = testApp.CreateTestClient()
+
+            let! r = client.GetAsync("/Hello")
+
+            let! rr =
+                r.EnsureSuccessStatusCode()
+                    .Content.ReadAsStringAsync()
+
+            Assert.NotEmpty(rr)
+        } 
+
+    [<Fact>]
+    let ``test stubbery with swagger gen client for json apis`` () =
+
+        task {
+            let expected =  {| Ok = "yeah" |}
+
+            let testApp =
+                test_stubbery { 
+                    GET "/externalApi" (fun r args -> expected |> box)
+                }
+
+            use client = testApp.CreateTestClient()
+            let typedClient = new MyOpenapi.Client(client)
+
+            let! r = typedClient.GetHello()
+
+            Assert.Equal(expected.Ok, r.Ok)
+        } 
+
+    [<Fact>]
     let ``test with extension works`` () =
 
         task {
 
             let testApp =
                 test { 
-                    stub [|HttpMethod.Get|] "/externalApi" (fun r args -> {| Ok = "yeah" |} |> box)
+                    stub [|HttpMethod.Get|] "/externalApi" (fun _ _ -> {| Ok = "yeah" |} |> R_JSON)
                 }
 
             use client = testApp.CreateTestClient()
@@ -281,7 +341,7 @@ module Tests =
 
             let testApp =
                 test { 
-                    GET "/externalApi" (fun r args -> expected |> box)
+                    GET "/externalApi" (fun _ _ -> expected |> R_JSON)
                 }
 
             use client = testApp.CreateTestClient()
@@ -290,25 +350,4 @@ module Tests =
             let! r = typedClient.GetHello()
 
             Assert.Equal(expected.Ok, r.Ok)
-        } 
-
-    [<Fact>]
-    let ``test with extension no stubbery works`` () =
-
-        task {
-
-            let testApp =
-                test2 { 
-                    stub [|HttpMethod.Get|] "/externalApi" (fun r args -> {| Ok = "yeah" |} |> box)
-                }
-
-            use client = testApp.CreateTestClient()
-
-            let! r = client.GetAsync("/Hello")
-
-            let! rr =
-                r.EnsureSuccessStatusCode()
-                    .Content.ReadAsStringAsync()
-
-            Assert.NotEmpty(rr)
         } 
