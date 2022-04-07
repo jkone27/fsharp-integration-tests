@@ -11,6 +11,9 @@ open System.Net.Http
 open System
 open Microsoft.AspNetCore.TestHost
 open Microsoft.Extensions.Http
+open Microsoft.AspNetCore.Routing.Template
+open Microsoft.AspNetCore.Routing.Patterns
+open Microsoft.AspNetCore.Routing
 
 type MyOpenapi = OpenApiClientProvider<"swagger.json">
 
@@ -108,8 +111,96 @@ module CE =
                         factory.Dispose()
                         stubbery.Dispose()
 
+
+    type MockClientHandler(methods, routeTemplate: string, responseStubber) as this = 
+        inherit DelegatingHandler()
+
+        override this.SendAsync(request, token) =
+            let templateMatcher = 
+                try
+                    let p = RoutePatternFactory.Parse(routeTemplate)
+                    let t = RouteTemplate(p)
+                    let tm = new TemplateMatcher(t, [] |> RouteValueDictionary)
+                    Some(tm)
+                with _ ->
+                    None
+            if methods |> Array.contains(request.Method) |> not then
+                base.SendAsync(request, token)
+            else if templateMatcher.IsNone then
+                failwith $"unable to match route for {routeTemplate}"
+            else if templateMatcher.Value.TryMatch(request.RequestUri.PathAndQuery, [] |> RouteValueDictionary) |> not then
+                base.SendAsync(request, token)
+            else
+                responseStubber request
+                |> Task.FromResult
+                
+
+    type TestClient2<'T when 'T: not struct>() as this =
+
+        let factory = new TestFactory<'T>()
+        let uri = { MockUri = null }
+        let delegatingHandlers = new ResizeArray<DelegatingHandler>()
+
+        member this.Yield(()) = (factory, delegatingHandlers)
+
+        [<CustomOperation("builder")>]
+        member this.Build(_, builder: IWebHostBuilder -> bool) =
+            factory.WithBuilder <- builder
+            this
+
+        [<CustomOperation("test_client")>]
+        member this.TestClient(_, builder: HttpClient -> bool) =
+            factory.WithHttpClient <- builder
+            this
+
+        [<CustomOperation("stub")>]
+        member this.Stub(_, methods, route, stub: HttpRequestMessage -> HttpResponseMessage) =
+            delegatingHandlers.Add(new MockClientHandler(methods, route, stub))
+            this
+
+        [<CustomOperation("GET")>]
+        member this.Get(x, route, stub) =
+            this.Stub(x, [|HttpMethod.Get|], route, stub)
+
+        [<CustomOperation("POST")>]
+        member this.Post(x, route, stub) =
+            this.Stub(x, [|HttpMethod.Post|], route, stub)
+
+        [<CustomOperation("PUT")>]
+        member this.Put(x, route, stub) =
+            this.Stub(x, [|HttpMethod.Put|], route, stub)
+
+        [<CustomOperation("DELETE")>]
+        member this.Delete(x, route, stub) =
+            this.Stub(x, [|HttpMethod.Delete|], route, stub)
+
+        member this.CreateTestClient() =
+            let clientBuilder = factory.WithWebHostBuilder(fun b -> 
+                    b.ConfigureTestServices(fun s ->
+
+                        s.ConfigureAll<HttpClientFactoryOptions>(fun options ->
+                            options.HttpMessageHandlerBuilderActions.Add(fun builder ->
+                                for dh in delegatingHandlers do
+                                    builder.AdditionalHandlers.Add(dh)
+                            ) |> ignore
+                        ) |> ignore
+                    ) |> ignore
+                )
+
+            clientBuilder.CreateClient()
+
+        member val Services = factory.Services
+
+        interface IDisposable 
+                with member this.Dispose() =
+                        factory.Dispose()
+
+
     // CE builder
     let test = new TestClient<Startup>()
+
+    //CE Builder without stubbery
+    let test2 = new TestClient<Startup>()
 
 module Tests =
 
@@ -199,4 +290,25 @@ module Tests =
             let! r = typedClient.GetHello()
 
             Assert.Equal(expected.Ok, r.Ok)
+        } 
+
+    [<Fact>]
+    let ``test with extension no stubbery works`` () =
+
+        task {
+
+            let testApp =
+                test2 { 
+                    stub [|HttpMethod.Get|] "/externalApi" (fun r args -> {| Ok = "yeah" |} |> box)
+                }
+
+            use client = testApp.CreateTestClient()
+
+            let! r = client.GetAsync("/Hello")
+
+            let! rr =
+                r.EnsureSuccessStatusCode()
+                    .Content.ReadAsStringAsync()
+
+            Assert.NotEmpty(rr)
         } 
