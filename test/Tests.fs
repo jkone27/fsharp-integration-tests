@@ -71,22 +71,20 @@ module CE =
             this
 
         member this.CreateTestClient() =
-            factory
-                .WithWebHostBuilder(fun b -> 
+            let clientBuilder = factory.WithWebHostBuilder(fun b -> 
                     b.ConfigureTestServices(fun s ->
                         s.ConfigureAll<HttpClientFactoryOptions>(fun options ->
-                           options.HttpClientActions.Add(fun c -> 
-                               c.BaseAddress <- uri.MockUri)
+                            options.HttpClientActions.Add(fun c -> 
+                                c.BaseAddress <- uri.MockUri
+                            ) |> ignore
                         ) |> ignore
-                    )
-                    |> ignore
+                    ) |> ignore
                 )
-                .CreateDefaultClient()
 
-        member this.StartStubs() =
             stubbery.Start()
             uri.MockUri <- new Uri(stubbery.Address)
-            ()
+            clientBuilder.CreateClient()
+
 
         member val Services = factory.Services
 
@@ -94,9 +92,6 @@ module CE =
                 with member this.Dispose() =
                         factory.Dispose()
                         stubbery.Dispose()
-
-        member this.Cleanup() =
-            (this :> IDisposable).Dispose()
 
     // CE builder
     let test = new TestClient<Startup>()
@@ -134,18 +129,16 @@ module Tests =
                 .WithWebHostBuilder(fun b ->
                     b.ConfigureTestServices(fun s ->
                         s.ConfigureAll<HttpClientFactoryOptions>(fun options ->
-                           options.HttpClientActions.Add(fun c -> 
-                               c.BaseAddress <- uri.MockUri)
+                            options.HttpClientActions.Add(fun c -> 
+                                c.BaseAddress <- uri.MockUri)
                         ) |> ignore
                     ) |> ignore
                 )
             
-
-        let client = application.CreateClient()
-
         try
             task {
 
+                let client = application.CreateClient()
                 stub.Start()
                 uri.MockUri <- new Uri(stub.Address)
 
@@ -159,22 +152,19 @@ module Tests =
 
     [<Fact>]
     let ``test with extension works`` () =
-        let app =
-            test { 
-                stub_request [|HttpMethod.Get|] "/externalApi" (fun r args -> {| Ok = "yeah" |} |> box)
-            }
-
-        let client = app.CreateTestClient()
-        
-        //let typedClient = MyOpenapi.Client(client)
 
         task {
 
-            app.StartStubs()
+            let app =
+                test { 
+                    stub_request [|HttpMethod.Get|] "/externalApi" (fun r args -> {| Ok = "yeah" |} |> box)
+                }
+
+            use client = app.CreateTestClient()
+
+            //let typedClient = MyOpenapi.Client(client)
 
             let! r = client.GetAsync("/Hello")
-
-            app.Cleanup()
 
             let! rr =
                 r.EnsureSuccessStatusCode()
