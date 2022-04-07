@@ -217,10 +217,10 @@ module CE =
 
 
     // CE builder
-    let test_stubbery = new TestStubberyClient<Startup>()
+    let test_stubbery () = new TestStubberyClient<Startup>()
 
     //CE Builder without stubbery
-    let test = new TestClient<Startup>()
+    let test () = new TestClient<Startup>()
 
 module Tests =
 
@@ -278,7 +278,7 @@ module Tests =
         task {
 
             let testApp =
-                test_stubbery { 
+                test_stubbery () { 
                     stub [|HttpMethod.Get|] "/externalApi" (fun r args -> {| Ok = "yeah" |} |> box)
                 }
 
@@ -300,7 +300,7 @@ module Tests =
             let expected =  {| Ok = "yeah" |}
 
             let testApp =
-                test_stubbery { 
+                test_stubbery () { 
                     GET "/externalApi" (fun r args -> expected |> box)
                 }
 
@@ -318,7 +318,7 @@ module Tests =
         task {
 
             let testApp =
-                test { 
+                test () { 
                     stub [|HttpMethod.Get|] "/externalApi" (fun _ _ -> {| Ok = "yeah" |} |> R_JSON)
                 }
 
@@ -340,7 +340,7 @@ module Tests =
             let expected =  {| Ok = "yeah" |}
 
             let testApp =
-                test { 
+                test () { 
                     GET "/externalApi" (fun _ _ -> expected |> R_JSON)
                 }
 
