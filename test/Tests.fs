@@ -243,7 +243,7 @@ module Tests =
         }
 
     [<Fact>]
-    let ``GET hello returns hello with stub`` () =
+    let ``GET hello returns hello with stub and stubbery`` () =
         task {
 
             use stub = new Stubbery.ApiStub()
@@ -313,7 +313,7 @@ module Tests =
         } 
 
     [<Fact>]
-    let ``test with extension works`` () =
+    let ``test with extension works no stubbery`` () =
 
         task {
 
