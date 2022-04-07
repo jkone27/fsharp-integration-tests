@@ -9,6 +9,7 @@ open Microsoft.Extensions.Logging
 open fsharpintegrationtests
 open System.Threading.Tasks
 open System.Net.Http
+open System.Net.Http.Json
 
 [<ApiController>]
 [<Route("[controller]")>]
@@ -53,5 +54,5 @@ type HelloController(logger: ILogger<WeatherForecastController>, httpClientFacto
 
             res.EnsureSuccessStatusCode() |> ignore
 
-            return! res.Content.ReadAsStringAsync()
+            return! res.Content.ReadFromJsonAsync<Hello>()
         }

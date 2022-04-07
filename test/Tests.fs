@@ -57,13 +57,13 @@ module CE =
             stubbery.Port <- port
             this
 
-        [<CustomOperation("stub")>]
-        member this.Stub(_, stub: Stubbery.ApiStub -> Stubbery.ISetup) =
+        [<CustomOperation("custom_stub")>]
+        member this.CustomStub(_, stub: Stubbery.ApiStub -> Stubbery.ISetup) =
             stub (stubbery) |> ignore
             this
 
-        [<CustomOperation("stub_request")>]
-        member this.StubRequest(_, methods, route, stub) =
+        [<CustomOperation("stub")>]
+        member this.Stub(_, methods, route, stub) =
             stubbery
                 .Request(methods)
                 .IfRoute(route)
@@ -84,7 +84,6 @@ module CE =
             stubbery.Start()
             uri.MockUri <- new Uri(stubbery.Address)
             clientBuilder.CreateClient()
-
 
         member val Services = factory.Services
 
@@ -118,51 +117,45 @@ module Tests =
 
     [<Fact>]
     let ``GET hello returns hello with stub`` () =
+        task {
 
-        let stub = new Stubbery.ApiStub()
-        stub.Get("/externalApi", fun r args -> """{ "ok" : "hello" }""" |> box) |> ignore
+            use stub = new Stubbery.ApiStub()
+            stub.Get("/externalApi", fun r args -> """{ "ok" : "hello" }""" |> box) |> ignore
 
-        let uri = { MockUri = new Uri("http://test") }
+            let uri = { MockUri = new Uri("http://test") }
 
-        let application =
-            (new WebApplicationFactory<Startup>())
-                .WithWebHostBuilder(fun b ->
-                    b.ConfigureTestServices(fun s ->
-                        s.ConfigureAll<HttpClientFactoryOptions>(fun options ->
-                            options.HttpClientActions.Add(fun c -> 
-                                c.BaseAddress <- uri.MockUri)
+            let application =
+                (new WebApplicationFactory<Startup>())
+                    .WithWebHostBuilder(fun b ->
+                        b.ConfigureTestServices(fun s ->
+                            s.ConfigureAll<HttpClientFactoryOptions>(fun options ->
+                                options.HttpClientActions.Add(fun c -> 
+                                    c.BaseAddress <- uri.MockUri)
+                            ) |> ignore
                         ) |> ignore
-                    ) |> ignore
-                )
+                    )
+
+            let client = application.CreateClient()
+            stub.Start()
+            uri.MockUri <- new Uri(stub.Address)
+
+            let! hello = client.GetAsync("/Hello")
+
+            Assert.NotNull(hello)
+
+            }
             
-        try
-            task {
-
-                let client = application.CreateClient()
-                stub.Start()
-                uri.MockUri <- new Uri(stub.Address)
-
-                let! hello = client.GetAsync("/Hello")
-
-                Assert.NotNull(hello)
-
-            } |> Async.AwaitTask |> Async.RunSynchronously
-        finally
-            stub.Dispose()
-
     [<Fact>]
     let ``test with extension works`` () =
 
         task {
 
-            let app =
+            let testApp =
                 test { 
-                    stub_request [|HttpMethod.Get|] "/externalApi" (fun r args -> {| Ok = "yeah" |} |> box)
+                    stub [|HttpMethod.Get|] "/externalApi" (fun r args -> {| Ok = "yeah" |} |> box)
                 }
 
-            use client = app.CreateTestClient()
-
-            //let typedClient = MyOpenapi.Client(client)
+            use client = testApp.CreateTestClient()
 
             let! r = client.GetAsync("/Hello")
 
@@ -171,4 +164,23 @@ module Tests =
                     .Content.ReadAsStringAsync()
 
             Assert.NotEmpty(rr)
+        } 
+
+    [<Fact>]
+    let ``test with swagger gen client for json apis`` () =
+
+        task {
+            let expected =  {| Ok = "yeah" |}
+
+            let testApp =
+                test { 
+                    stub [|HttpMethod.Get|] "/externalApi" (fun r args -> expected |> box)
+                }
+
+            use client = testApp.CreateTestClient()
+            let typedClient = new MyOpenapi.Client(client)
+
+            let! r = typedClient.GetHello()
+
+            Assert.Equal(expected.Ok, r.Ok)
         } 
