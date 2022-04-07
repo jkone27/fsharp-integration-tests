@@ -70,6 +70,22 @@ module CE =
                 .Response(fun r args -> stub r args) |> ignore
             this
 
+        [<CustomOperation("GET")>]
+        member this.Get(x, route, stub) =
+            this.Stub(x, [|HttpMethod.Get|], route, stub)
+
+        [<CustomOperation("POST")>]
+        member this.Post(x, route, stub) =
+            this.Stub(x, [|HttpMethod.Post|], route, stub)
+
+        [<CustomOperation("PUT")>]
+        member this.Put(x, route, stub) =
+            this.Stub(x, [|HttpMethod.Put|], route, stub)
+
+        [<CustomOperation("DELETE")>]
+        member this.Delete(x, route, stub) =
+            this.Stub(x, [|HttpMethod.Delete|], route, stub)
+
         member this.CreateTestClient() =
             let clientBuilder = factory.WithWebHostBuilder(fun b -> 
                     b.ConfigureTestServices(fun s ->
@@ -174,7 +190,7 @@ module Tests =
 
             let testApp =
                 test { 
-                    stub [|HttpMethod.Get|] "/externalApi" (fun r args -> expected |> box)
+                    GET "/externalApi" (fun r args -> expected |> box)
                 }
 
             use client = testApp.CreateTestClient()
