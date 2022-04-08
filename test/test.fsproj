@@ -26,6 +26,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\src\app.fsproj" />
+    <ProjectReference Include="..\ApiStub.FSharp.Stubbery\ApiStub.FSharp.Stubbery.fsproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Update="FSharp.Core" Version="6.0.3" />

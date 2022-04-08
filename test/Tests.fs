@@ -16,227 +16,22 @@ open Microsoft.AspNetCore.Routing.Patterns
 open Microsoft.AspNetCore.Routing
 open System.Net
 open System.Text.Json
+open Microsoft.AspNetCore.Http
+
+open ApiStub.FSharp
 
 type MyOpenapi = OpenApiClientProvider<"swagger.json">
 
-module BuilderExtensions =
-
-    let configure_services (configure : IServiceCollection -> 'a) (builder: IWebHostBuilder) : IWebHostBuilder =
-        builder.ConfigureServices(fun s -> configure(s) |> ignore)
-
-    let configure_test_services (configure : IServiceCollection -> 'a) (builder: IWebHostBuilder) : IWebHostBuilder =
-        builder.ConfigureTestServices(fun s -> configure(s) |> ignore)
-
-    let web_host_builder (builder : IWebHostBuilder -> 'a) (factory: WebApplicationFactory<'T>)   =
-        factory.WithWebHostBuilder(fun b -> builder(b) |> ignore)
-
-    let web_configure_services configure =
-        configure_services configure 
-        |> web_host_builder
-
-    let web_configure_test_services configure =
-        configure_test_services configure
-        |> web_host_builder
-
-module CE =
-    open System.Net.Http.Json
-    open BuilderExtensions
-
-    type MutableUri = { mutable MockUri: Uri }
-
-    type TestStubberyClient<'T when 'T: not struct>() as this =
-
-        let factory = new WebApplicationFactory<'T>()
-        let stubbery = new Stubbery.ApiStub()
-        let uri = { MockUri = null }
-
-        member this.Yield(()) = (factory, stubbery)
-
-        [<CustomOperation("stub_port")>]
-        member this.StubPort(_, port: int) =
-            stubbery.Port <- port
-            this
-
-        [<CustomOperation("custom_stub")>]
-        member this.CustomStub(_, stub: Stubbery.ApiStub -> Stubbery.ISetup) =
-            stub (stubbery) |> ignore
-            this
-
-        [<CustomOperation("stub")>]
-        member this.Stub(_, methods, route, stub) =
-            stubbery
-                .Request(methods)
-                .IfRoute(route)
-                .Response(fun r args -> stub r args) |> ignore
-            this
-
-        [<CustomOperation("GET")>]
-        member this.Get(x, route, stub) =
-            this.Stub(x, [|HttpMethod.Get|], route, stub)
-
-        [<CustomOperation("POST")>]
-        member this.Post(x, route, stub) =
-            this.Stub(x, [|HttpMethod.Post|], route, stub)
-
-        [<CustomOperation("PUT")>]
-        member this.Put(x, route, stub) =
-            this.Stub(x, [|HttpMethod.Put|], route, stub)
-
-        [<CustomOperation("DELETE")>]
-        member this.Delete(x, route, stub) =
-            this.Stub(x, [|HttpMethod.Delete|], route, stub)
-
-        member this.GetFactory() =
-            let clientBuilder =
-                factory
-                |> web_configure_services (fun s ->
-                    s.ConfigureAll<HttpClientFactoryOptions>(fun options ->
-                        options.HttpClientActions.Add(fun c -> 
-                            c.BaseAddress <- uri.MockUri
-                        )
-                    )
-                )
-
-            stubbery.Start()
-            uri.MockUri <- new Uri(stubbery.Address)
-            clientBuilder
-
-        interface IDisposable 
-                with member this.Dispose() =
-                        factory.Dispose()
-                        stubbery.Dispose()
-
-    type MockClientHandler(methods, templateMatcher: TemplateMatcher, responseStubber) as this = 
-        inherit DelegatingHandler()
-
-        override this.SendAsync(request, token) =
-            let routeDict = new RouteValueDictionary()
-            if methods |> Array.contains(request.Method) |> not then
-                base.SendAsync(request, token)
-            else if templateMatcher.TryMatch(request.RequestUri.PathAndQuery, routeDict) |> not then
-                base.SendAsync(request, token)
-            else
-                responseStubber request routeDict
-                |> Task.FromResult
-                
-    let inline R_OK (x: string) =
-        let response = new HttpResponseMessage(HttpStatusCode.OK)
-        response.Content <- new StringContent(x, Text.Encoding.UTF8, "application/json")
-        response
-
-    let inline R_JSON x =
-        let response = new HttpResponseMessage(HttpStatusCode.OK)
-        response.Content <- JsonContent.Create(x)
-        response
-
-    let inline R_ERROR statusCode content =
-        let response = new HttpResponseMessage(statusCode)
-        response.Content <- content
-        response
-
-    type TestClient<'T when 'T: not struct>() as this =
-
-        let factory = new WebApplicationFactory<'T>()
-        let delegatingHandlers = new ResizeArray<DelegatingHandler>()
-        let customConfigureServices = new ResizeArray<IServiceCollection -> obj>()
-
-        member this.Yield(()) = (factory, delegatingHandlers, customConfigureServices)
-
-        [<CustomOperation("stub")>]
-        member this.Stub(_, methods, routeTemplate, stub: HttpRequestMessage -> RouteValueDictionary -> HttpResponseMessage) =
-            
-            let routeValueDict = new RouteValueDictionary()
-            let templateMatcher = 
-                try
-                    let rt = TemplateParser.Parse(routeTemplate)
-                    let tm = new TemplateMatcher(rt, routeValueDict)
-                    Some(tm)
-                with _ ->
-                    None
-
-            if templateMatcher.IsNone then
-                failwith $"stub: error parsing route template for {routeTemplate}"
-
-            delegatingHandlers.Add(new MockClientHandler(methods, templateMatcher.Value, stub))
-            this
-
-        [<CustomOperation("stub")>]
-        member this.Stub2(x, methods, routeTemplate, stub: HttpResponseMessage) =
-            this.Stub(x, methods, routeTemplate, fun _ _ -> stub)
-
-        [<CustomOperation("stubs")>]
-        member this.StubString(x, methods, routeTemplate, stub: string) =
-            this.Stub2(x, methods, routeTemplate, stub |> R_OK)
-
-        [<CustomOperation("stubj")>]
-        member this.StubJson(x, methods, routeTemplate, stub) =
-            this.Stub2(x, methods, routeTemplate, stub |> R_JSON)
-
-        [<CustomOperation("GET")>]
-        member this.Get(x, route, stub) =
-            this.Stub(x, [|HttpMethod.Get|], route, stub)
-
-        [<CustomOperation("GETJ")>]
-        member this.GetJson(x, route, stub) =
-            this.StubJson(x, [|HttpMethod.Get|], route, stub)
-
-        [<CustomOperation("POST")>]
-        member this.Post(x, route, stub) =
-            this.Stub(x, [|HttpMethod.Post|], route, stub)
-
-        [<CustomOperation("POSTJ")>]
-        member this.PostJson(x, route, stub) =
-            this.StubJson(x, [|HttpMethod.Post|], route, stub)
-
-        [<CustomOperation("PUT")>]
-        member this.Put(x, route, stub) =
-            this.Stub(x, [|HttpMethod.Put|], route, stub)
-
-        [<CustomOperation("PUTJ")>]
-        member this.PutJson(x, route, stub) =
-            this.StubJson(x, [|HttpMethod.Put|], route, stub)
-
-        [<CustomOperation("DELETE")>]
-        member this.Delete(x, route, stub) =
-            this.Stub(x, [|HttpMethod.Delete|], route, stub)
-
-        [<CustomOperation("config_services")>]
-        member this.CustomConfigServices(x, customAction) =
-            customConfigureServices.Add(customAction)
-
-        [<CustomOperation("test_client")>]
-        member this.TestClient(x, customAction) =
-            customConfigureServices.Add(customAction)
-
-        member this.GetFactory() =
-            factory
-            |> web_configure_services (fun s ->
-                s.ConfigureAll<HttpClientFactoryOptions>(fun options ->
-                    options.HttpMessageHandlerBuilderActions.Add(fun builder ->
-                        for dh in delegatingHandlers do
-                            builder.AdditionalHandlers.Add(dh)
-                    )
-                ) |> ignore
-
-                for custom_config in customConfigureServices do
-                    custom_config(s) 
-                    |> ignore
-            )
-
-        interface IDisposable 
-                with member this.Dispose() =
-                        factory.Dispose()
-
-    // CE builder
-    let test_stubbery () = new TestStubberyClient<Startup>()
-
-    //CE Builder without stubbery
-    let test () = new TestClient<Startup>()
+type MutableUri = Stubbery.StubberyCE.MutableUri 
 
 module Tests =
 
     open CE
     open BuilderExtensions
+    open HttpResponseHelpers
+
+    let test_stubbery () = new Stubbery.StubberyCE.TestStubberyClient<Startup>()
+    let test () = new CE.TestClient<Startup>()
 
     [<Fact>]
     let ``GET weather returns a not null Date`` () =
@@ -261,7 +56,7 @@ module Tests =
             use stub = new Stubbery.ApiStub()
             stub.Get("/externalApi", fun r args -> """{ "ok" : "hello" }""" |> box) |> ignore
 
-            let uri = { MockUri = new Uri("http://test") }
+            let uri : MutableUri = { MockUri = new Uri("http://test") }
 
             let application =
                 (new WebApplicationFactory<Startup>())
@@ -335,7 +130,7 @@ module Tests =
                     POSTJ "/anotherStub" {| Test = "hello" ; Time = 1|}
                     POST "/notUsed" (fun _ _ -> "ok" |> R_OK)
                     POST "/notUsed2" (fun _ _ -> "ok" |> R_OK)
-                    POST "/errRoute" (fun _ _ -> R_ERROR HttpStatusCode.NotAcceptable ("err" |> StringContent))
+                    POST "/errRoute" (fun _ _ -> R_ERROR HttpStatusCode.NotAcceptable (new StringContent("err")))
                 }
 
             use client = testApp.GetFactory().CreateClient()
