@@ -19,8 +19,28 @@ open System.Text.Json
 
 type MyOpenapi = OpenApiClientProvider<"swagger.json">
 
+module BuilderExtensions =
+
+    let configure_services (configure : IServiceCollection -> 'a) (builder: IWebHostBuilder) : IWebHostBuilder =
+        builder.ConfigureServices(fun s -> configure(s) |> ignore)
+
+    let configure_test_services (configure : IServiceCollection -> 'a) (builder: IWebHostBuilder) : IWebHostBuilder =
+        builder.ConfigureTestServices(fun s -> configure(s) |> ignore)
+
+    let web_host_builder (builder : IWebHostBuilder -> 'a) (factory: WebApplicationFactory<'T>)   =
+        factory.WithWebHostBuilder(fun b -> builder(b) |> ignore)
+
+    let web_configure_services configure =
+        configure_services configure 
+        |> web_host_builder
+
+    let web_configure_test_services configure =
+        configure_test_services configure
+        |> web_host_builder
+
 module CE =
     open System.Net.Http.Json
+    open BuilderExtensions
 
     type MutableUri = { mutable MockUri: Uri }
 
@@ -67,14 +87,14 @@ module CE =
             this.Stub(x, [|HttpMethod.Delete|], route, stub)
 
         member this.GetFactory() =
-            let clientBuilder = factory.WithWebHostBuilder(fun b -> 
-                    b.ConfigureServices(fun s ->
-                        s.ConfigureAll<HttpClientFactoryOptions>(fun options ->
-                            options.HttpClientActions.Add(fun c -> 
-                                c.BaseAddress <- uri.MockUri
-                            ) |> ignore
-                        ) |> ignore
-                    ) |> ignore
+            let clientBuilder =
+                factory
+                |> web_configure_services (fun s ->
+                    s.ConfigureAll<HttpClientFactoryOptions>(fun options ->
+                        options.HttpClientActions.Add(fun c -> 
+                            c.BaseAddress <- uri.MockUri
+                        )
+                    )
                 )
 
             stubbery.Start()
@@ -85,7 +105,6 @@ module CE =
                 with member this.Dispose() =
                         factory.Dispose()
                         stubbery.Dispose()
-
 
     type MockClientHandler(methods, templateMatcher: TemplateMatcher, responseStubber) as this = 
         inherit DelegatingHandler()
@@ -119,8 +138,9 @@ module CE =
 
         let factory = new WebApplicationFactory<'T>()
         let delegatingHandlers = new ResizeArray<DelegatingHandler>()
+        let customConfigureServices = new ResizeArray<IServiceCollection -> obj>()
 
-        member this.Yield(()) = (factory, delegatingHandlers)
+        member this.Yield(()) = (factory, delegatingHandlers, customConfigureServices)
 
         [<CustomOperation("stub")>]
         member this.Stub(_, methods, routeTemplate, stub: HttpRequestMessage -> RouteValueDictionary -> HttpResponseMessage) =
@@ -180,22 +200,32 @@ module CE =
         member this.Delete(x, route, stub) =
             this.Stub(x, [|HttpMethod.Delete|], route, stub)
 
+        [<CustomOperation("config_services")>]
+        member this.CustomConfigServices(x, customAction) =
+            customConfigureServices.Add(customAction)
+
+        [<CustomOperation("test_client")>]
+        member this.TestClient(x, customAction) =
+            customConfigureServices.Add(customAction)
+
         member this.GetFactory() =
-            factory.WithWebHostBuilder(fun b -> 
-                    b.ConfigureServices(fun s ->
-                        s.ConfigureAll<HttpClientFactoryOptions>(fun options ->
-                            options.HttpMessageHandlerBuilderActions.Add(fun builder ->
-                                for dh in delegatingHandlers do
-                                    builder.AdditionalHandlers.Add(dh)
-                            ) |> ignore
-                        ) |> ignore
-                    ) |> ignore
-                )
+            factory
+            |> web_configure_services (fun s ->
+                s.ConfigureAll<HttpClientFactoryOptions>(fun options ->
+                    options.HttpMessageHandlerBuilderActions.Add(fun builder ->
+                        for dh in delegatingHandlers do
+                            builder.AdditionalHandlers.Add(dh)
+                    )
+                ) |> ignore
+
+                for custom_config in customConfigureServices do
+                    custom_config(s) 
+                    |> ignore
+            )
 
         interface IDisposable 
                 with member this.Dispose() =
                         factory.Dispose()
-
 
     // CE builder
     let test_stubbery () = new TestStubberyClient<Startup>()
@@ -206,6 +236,7 @@ module CE =
 module Tests =
 
     open CE
+    open BuilderExtensions
 
     [<Fact>]
     let ``GET weather returns a not null Date`` () =
@@ -353,13 +384,14 @@ module Tests =
 
             //let privateMock = new MockClientHandler()
 
-            let factory = testApp.GetFactory().WithWebHostBuilder(fun (b : IWebHostBuilder) -> 
-                b.ConfigureTestServices(fun (t: IServiceCollection) -> 
-                        t.AddHttpClient("customClient", configureClient =
-                            (fun c -> c.BaseAddress <- new Uri("http://localhost/else"))
-                        ) |> ignore
-                    ) |> ignore
+            let factory = 
+                testApp.GetFactory()
+                |> web_configure_test_services (fun t -> 
+                    t.AddHttpClient("customClient", configureClient =
+                        (fun c -> c.BaseAddress <- new Uri("http://localhost/else"))
+                    )
                 )
+                
             let clientFactory = factory.Services.GetRequiredService<IHttpClientFactory>()
             let customClient = clientFactory.CreateClient("customClient")
 
