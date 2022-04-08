@@ -24,39 +24,13 @@ module CE =
 
     type MutableUri = { mutable MockUri: Uri }
 
-    type TestFactory<'T when 'T: not struct>() as this =
-        inherit WebApplicationFactory<'T>()
-
-        /// bool return parameter : continueBase
-        member val WithHttpClient: HttpClient -> bool = fun _ -> false with get, set
-
-        member val WithBuilder: IWebHostBuilder -> bool = fun _ -> false with get, set
-
-        override this.ConfigureClient(httpClient) =
-            if this.WithHttpClient(httpClient) then
-                ``base``.ConfigureClient(httpClient)
-
-        override this.ConfigureWebHost(builder) =
-            if this.WithBuilder(builder) then
-                ``base``.ConfigureWebHost(builder)
-
     type TestStubberyClient<'T when 'T: not struct>() as this =
 
-        let factory = new TestFactory<'T>()
+        let factory = new WebApplicationFactory<'T>()
         let stubbery = new Stubbery.ApiStub()
         let uri = { MockUri = null }
 
         member this.Yield(()) = (factory, stubbery)
-
-        [<CustomOperation("builder")>]
-        member this.Build(_, builder: IWebHostBuilder -> bool) =
-            factory.WithBuilder <- builder
-            this
-
-        [<CustomOperation("test_client")>]
-        member this.TestClient(_, builder: HttpClient -> bool) =
-            factory.WithHttpClient <- builder
-            this
 
         [<CustomOperation("stub_port")>]
         member this.StubPort(_, port: int) =
@@ -92,7 +66,7 @@ module CE =
         member this.Delete(x, route, stub) =
             this.Stub(x, [|HttpMethod.Delete|], route, stub)
 
-        member this.CreateTestClient() =
+        member this.GetFactory() =
             let clientBuilder = factory.WithWebHostBuilder(fun b -> 
                     b.ConfigureTestServices(fun s ->
                         s.ConfigureAll<HttpClientFactoryOptions>(fun options ->
@@ -105,9 +79,7 @@ module CE =
 
             stubbery.Start()
             uri.MockUri <- new Uri(stubbery.Address)
-            clientBuilder.CreateClient()
-
-        member val Services = factory.Services
+            clientBuilder
 
         interface IDisposable 
                 with member this.Dispose() =
@@ -145,20 +117,10 @@ module CE =
 
     type TestClient<'T when 'T: not struct>() as this =
 
-        let factory = new TestFactory<'T>()
+        let factory = new WebApplicationFactory<'T>()
         let delegatingHandlers = new ResizeArray<DelegatingHandler>()
 
         member this.Yield(()) = (factory, delegatingHandlers)
-
-        [<CustomOperation("builder")>]
-        member this.Build(_, builder: IWebHostBuilder -> bool) =
-            factory.WithBuilder <- builder
-            this
-
-        [<CustomOperation("test_client")>]
-        member this.TestClient(_, builder: HttpClient -> bool) =
-            factory.WithHttpClient <- builder
-            this
 
         [<CustomOperation("stub")>]
         member this.Stub(_, methods, routeTemplate, stub: HttpRequestMessage -> RouteValueDictionary -> HttpResponseMessage) =
@@ -218,8 +180,8 @@ module CE =
         member this.Delete(x, route, stub) =
             this.Stub(x, [|HttpMethod.Delete|], route, stub)
 
-        member this.CreateTestClient() =
-            let clientBuilder = factory.WithWebHostBuilder(fun b -> 
+        member this.GetFactory() =
+            factory.WithWebHostBuilder(fun b -> 
                     b.ConfigureTestServices(fun s ->
 
                         s.ConfigureAll<HttpClientFactoryOptions>(fun options ->
@@ -230,10 +192,6 @@ module CE =
                         ) |> ignore
                     ) |> ignore
                 )
-
-            clientBuilder.CreateClient()
-
-        member val Services = factory.Services
 
         interface IDisposable 
                 with member this.Dispose() =
@@ -306,7 +264,7 @@ module Tests =
                     GET "/externalApi" (fun r args -> {| Ok = "yeah" |} |> box)
                 }
 
-            use client = testApp.CreateTestClient()
+            use client = testApp.GetFactory().CreateClient()
 
             let! r = client.GetAsync("/Hello")
 
@@ -328,7 +286,7 @@ module Tests =
                     GET "/externalApi" (fun r args -> expected |> box)
                 }
 
-            use client = testApp.CreateTestClient()
+            use client = testApp.GetFactory().CreateClient()
             let typedClient = new MyOpenapi.Client(client)
 
             let! r = typedClient.GetHello()
@@ -344,12 +302,13 @@ module Tests =
             let testApp =
                 test () { 
                     GETJ "/externalApi" {| Ok = "yeah" |}
+                    POSTJ "/anotherStub" {| Test = "hello" ; Time = 1|}
                     POST "/notUsed" (fun _ _ -> "ok" |> R_OK)
                     POST "/notUsed2" (fun _ _ -> "ok" |> R_OK)
                     POST "/errRoute" (fun _ _ -> R_ERROR HttpStatusCode.NotAcceptable ("err" |> StringContent))
                 }
 
-            use client = testApp.CreateTestClient()
+            use client = testApp.GetFactory().CreateClient()
 
             let! r = client.GetAsync("/Hello")
 
@@ -371,12 +330,39 @@ module Tests =
                     GETJ "/notUsed" expected
                     GETJ "/externalApi" expected
                     POSTJ "/notUsed" expected
+                    
                 }
 
-            use client = testApp.CreateTestClient()
+            use client = testApp.GetFactory().CreateClient()
             let typedClient = new MyOpenapi.Client(client)
 
             let! r = typedClient.GetHello()
 
             Assert.Equal(expected.Ok, r.Ok)
         } 
+
+    [<Fact>]
+    let ``check custom client override still allowed`` () =
+
+        task {
+            let expected =  {| Ok = "yeah" |}
+
+            let testApp =
+                test () { 
+                    POSTJ "/another" expected
+                }
+
+            //let privateMock = new MockClientHandler()
+
+            let factory = testApp.GetFactory().WithWebHostBuilder(fun (b : IWebHostBuilder) -> 
+                b.ConfigureTestServices(fun (t: IServiceCollection) -> 
+                        t.AddHttpClient("customClient", configureClient =
+                            (fun c -> c.BaseAddress <- new Uri("http://localhost/else"))
+                        ) |> ignore
+                    ) |> ignore
+                )
+            let clientFactory = factory.Services.GetRequiredService<IHttpClientFactory>()
+            let customClient = clientFactory.CreateClient("customClient")
+
+            Assert.Equal("http://localhost/else", customClient.BaseAddress.ToString())
+        }
