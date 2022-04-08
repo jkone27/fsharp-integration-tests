@@ -68,7 +68,7 @@ module CE =
 
         member this.GetFactory() =
             let clientBuilder = factory.WithWebHostBuilder(fun b -> 
-                    b.ConfigureTestServices(fun s ->
+                    b.ConfigureServices(fun s ->
                         s.ConfigureAll<HttpClientFactoryOptions>(fun options ->
                             options.HttpClientActions.Add(fun c -> 
                                 c.BaseAddress <- uri.MockUri
@@ -182,8 +182,7 @@ module CE =
 
         member this.GetFactory() =
             factory.WithWebHostBuilder(fun b -> 
-                    b.ConfigureTestServices(fun s ->
-
+                    b.ConfigureServices(fun s ->
                         s.ConfigureAll<HttpClientFactoryOptions>(fun options ->
                             options.HttpMessageHandlerBuilderActions.Add(fun builder ->
                                 for dh in delegatingHandlers do
