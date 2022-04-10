@@ -52,7 +52,7 @@ module HttpResponseHelpers =
 
 module DelegatingHandlers =
     
-    type MockClientHandler(methods, templateMatcher: TemplateMatcher, responseStubber) as this = 
+    type MockClientHandler(methods, templateMatcher: TemplateMatcher, responseStubber) = 
         inherit DelegatingHandler()
 
         override this.SendAsync(request, token) =
@@ -71,7 +71,7 @@ module CE =
     open HttpResponseHelpers
     open DelegatingHandlers
     
-    type TestClient<'T when 'T: not struct>() as this =
+    type TestClient<'T when 'T: not struct>() =
 
         let factory = new WebApplicationFactory<'T>()
         let delegatingHandlers = new ResizeArray<DelegatingHandler>()
@@ -79,6 +79,7 @@ module CE =
 
         member this.Yield(()) = (factory, delegatingHandlers, customConfigureServices)
 
+        /// generic stub operation with stub function
         [<CustomOperation("stub")>]
         member this.Stub(_, methods, routeTemplate, stub: HttpRequestMessage -> RouteValueDictionary -> HttpResponseMessage) =
             
@@ -97,52 +98,68 @@ module CE =
             delegatingHandlers.Add(new MockClientHandler(methods, templateMatcher.Value, stub))
             this
 
+        /// stub operation with stub object (HttpResponseMessage)
         [<CustomOperation("stub")>]
         member this.Stub2(x, methods, routeTemplate, stub: HttpResponseMessage) =
             this.Stub(x, methods, routeTemplate, fun _ _ -> stub)
 
+        /// string stub
         [<CustomOperation("stubs")>]
         member this.StubString(x, methods, routeTemplate, stub: string) =
             this.Stub2(x, methods, routeTemplate, stub |> R_OK)
 
+        /// json stub
         [<CustomOperation("stubj")>]
         member this.StubJson(x, methods, routeTemplate, stub) =
             this.Stub2(x, methods, routeTemplate, stub |> R_JSON)
 
+        /// stub GET request with stub function
         [<CustomOperation("GET")>]
         member this.Get(x, route, stub) =
             this.Stub(x, [|HttpMethod.Get|], route, stub)
 
+        /// stub GET request with stub object
+        [<CustomOperation("GET")>]
+        member this.Get2(x, route, stub) =
+            this.Stub2(x, [|HttpMethod.Get|], route, stub)
+
+        /// stub GET json
         [<CustomOperation("GETJ")>]
         member this.GetJson(x, route, stub) =
             this.StubJson(x, [|HttpMethod.Get|], route, stub)
 
+        /// stub POST
         [<CustomOperation("POST")>]
         member this.Post(x, route, stub) =
             this.Stub(x, [|HttpMethod.Post|], route, stub)
 
+        /// stub POST json
         [<CustomOperation("POSTJ")>]
         member this.PostJson(x, route, stub) =
             this.StubJson(x, [|HttpMethod.Post|], route, stub)
 
+        /// stub PUT
         [<CustomOperation("PUT")>]
         member this.Put(x, route, stub) =
             this.Stub(x, [|HttpMethod.Put|], route, stub)
 
+        /// stub PUT json
         [<CustomOperation("PUTJ")>]
         member this.PutJson(x, route, stub) =
             this.StubJson(x, [|HttpMethod.Put|], route, stub)
 
+        /// stub DELETE
         [<CustomOperation("DELETE")>]
         member this.Delete(x, route, stub) =
             this.Stub(x, [|HttpMethod.Delete|], route, stub)
 
+        /// stub DELETE json
+        [<CustomOperation("DELETEJ")>]
+        member this.DeleteJson(x, route, stub) =
+            this.StubJson(x, [|HttpMethod.Delete|], route, stub)
+
         [<CustomOperation("config_services")>]
         member this.CustomConfigServices(x, customAction) =
-            customConfigureServices.Add(customAction)
-
-        [<CustomOperation("test_client")>]
-        member this.TestClient(x, customAction) =
             customConfigureServices.Add(customAction)
 
         member this.GetFactory() =
@@ -158,6 +175,7 @@ module CE =
                 for custom_config in customConfigureServices do
                     custom_config(s) 
                     |> ignore
+
             )
 
         interface IDisposable 

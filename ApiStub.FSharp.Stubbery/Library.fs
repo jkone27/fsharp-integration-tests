@@ -13,7 +13,7 @@ module StubberyCE =
 
     type MutableUri = { mutable MockUri: Uri }
 
-    type TestStubberyClient<'T when 'T: not struct>() as this =
+    type TestStubberyClient<'T when 'T: not struct>() =
 
         let factory = new WebApplicationFactory<'T>()
         let stubbery = new Stubbery.ApiStub()

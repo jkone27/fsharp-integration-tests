@@ -3,13 +3,21 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.1.32328.378
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "app", "src\app.fsproj", "{BF90DE53-4318-4F58-9889-D4173C24EB18}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "app", "src\app.fsproj", "{BF90DE53-4318-4F58-9889-D4173C24EB18}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "test", "test\test.fsproj", "{8756BCBB-995D-436E-8D2F-CADAA325948B}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "test", "test\test.fsproj", "{8756BCBB-995D-436E-8D2F-CADAA325948B}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "ApiStub.FSharp", "ApiStub.FSharp\ApiStub.FSharp.fsproj", "{F7EE43A1-C472-4B78-97AD-51B5435CC1BE}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "ApiStub.FSharp", "ApiStub.FSharp\ApiStub.FSharp.fsproj", "{F7EE43A1-C472-4B78-97AD-51B5435CC1BE}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "ApiStub.FSharp.Stubbery", "ApiStub.FSharp.Stubbery\ApiStub.FSharp.Stubbery.fsproj", "{24264817-88F6-4E55-B1E2-18FD5BA8397D}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "ApiStub.FSharp.Stubbery", "ApiStub.FSharp.Stubbery\ApiStub.FSharp.Stubbery.fsproj", "{24264817-88F6-4E55-B1E2-18FD5BA8397D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D4C589F1-03B9-4E1D-BB6C-BFDFDD7AD169}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		.github\workflows\dotnet.yml = .github\workflows\dotnet.yml
+		README.md = README.md
+		testNuget.fsx = testNuget.fsx
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -3,6 +3,23 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageId>ApiStub.FSharp.Stubbery</PackageId>
+    <Version>1.0.0-alpha</Version>
+    <Authors>jkone27</Authors>
+    <RequireLicenseAcceptance>false</RequireLicenseAcceptance>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageTags>Aspnet;Testing;Integration Testing;dotnet;Stub;Stubbery</PackageTags>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <RepositoryUrl>https://github.com/jkone27/fsharp-integration-tests.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <EnablePackageValidation>true</EnablePackageValidation>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <OutputType>Library</OutputType>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,5 +33,9 @@
     <PackageReference Include="Stubbery" Version="2.7.1">
       <GeneratePathProperty></GeneratePathProperty>
     </PackageReference>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.1" PrivateAssets="All" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Update="FSharp.Core" Version="6.0.3" />
   </ItemGroup>
 </Project>
