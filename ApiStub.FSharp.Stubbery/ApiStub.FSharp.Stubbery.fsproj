@@ -3,6 +3,13 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageId>ApiStub.FSharp.Stubbery</PackageId>
+    <Version>1.0.1-alpha</Version>
+    <Authors>jkone27</Authors>
+    <RequireLicenseAcceptance>false</RequireLicenseAcceptance>
+    <License>MIT</License>
+    <PackageTags>Aspnet;Testing;Integration Testing;dotnet;Stub;Stubbery</PackageTags>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <ItemGroup>
