@@ -52,7 +52,7 @@ module HttpResponseHelpers =
 
 module DelegatingHandlers =
     
-    type MockClientHandler(methods, templateMatcher: TemplateMatcher, responseStubber) as this = 
+    type MockClientHandler(methods, templateMatcher: TemplateMatcher, responseStubber) = 
         inherit DelegatingHandler()
 
         override this.SendAsync(request, token) =
@@ -71,7 +71,7 @@ module CE =
     open HttpResponseHelpers
     open DelegatingHandlers
     
-    type TestClient<'T when 'T: not struct>() as this =
+    type TestClient<'T when 'T: not struct>() =
 
         let factory = new WebApplicationFactory<'T>()
         let delegatingHandlers = new ResizeArray<DelegatingHandler>()
