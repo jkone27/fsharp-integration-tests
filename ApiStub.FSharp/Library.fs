@@ -71,15 +71,38 @@ module CE =
     open HttpResponseHelpers
     open DelegatingHandlers
 
+    type ResponseStreamWrapperHandler(handler:  HttpMessageHandler) =
+        inherit HttpMessageHandler()
+
+        override this.SendAsync(request, cancellationToken) =
+            
+            let baseSend = base.SendAsync(request, cancellationToken)
+            
+            task {
+                let! response = baseSend
+
+                let! bytes = response.Content.ReadAsByteArrayAsync(cancellationToken)
+
+                let newContent = new ByteArrayContent(bytes)
+
+                for sourceHeader in response.Content.Headers do
+                    let vals = sourceHeader.Value |> Seq.toArray
+                    newContent.Headers.Add(sourceHeader.Key, vals)
+
+                response.Content <- newContent
+
+                return response
+            }
+
     type MockTerminalHandler() = 
         inherit HttpMessageHandler()
 
-        override this.SendAsync(request, token) =
-            task {
-                let msg = new HttpResponseMessage(HttpStatusCode.BadRequest)
-                msg.Content <- JsonContent.Create({| Error = "No Mocks for This Call" |})
-                return msg
-            }
+        override this.SendAsync(_, token) =
+            token.ThrowIfCancellationRequested()
+            let msg = new HttpResponseMessage(HttpStatusCode.BadRequest)
+            msg.Content <- JsonContent.Create({| Error = "No Mocks for This Call" |})
+            Task.FromResult(msg)
+            
     
     type TestClient<'T when 'T: not struct>() =
 
@@ -112,7 +135,7 @@ module CE =
                         new HttpClientHandler()
                     else
                         new MockTerminalHandler()
-                httpMessageHandler <- new MockClientHandler(baseClient, methods, templateMatcher.Value, stub)
+                httpMessageHandler <- new MockClientHandler(new ResponseStreamWrapperHandler(baseClient), methods, templateMatcher.Value, stub)
             else
                 httpMessageHandler <- new MockClientHandler(httpMessageHandler, methods, templateMatcher.Value, stub)
 
