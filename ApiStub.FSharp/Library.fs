@@ -68,8 +68,10 @@ module DelegatingHandlers =
             else if templateMatcher.TryMatch(request.RequestUri.AbsolutePath |> PathString, routeDict) |> not then
                 base.SendAsync(request, token)
             else
-                responseStubber request routeDict
-                |> Task.FromResult
+                task {
+                    let expected = responseStubber request routeDict
+                    return expected
+                }
         
 
 module CE =
@@ -160,7 +162,7 @@ module CE =
         /// string stub
         [<CustomOperation("stubs")>]
         member this.StubString(x, methods, routeTemplate, stub: string) =
-            this.Stub2(x, methods, routeTemplate, stub |> R_OK "text/html")
+            this.Stub2(x, methods, routeTemplate, stub |> R_TEXT)
 
         /// json stub
         [<CustomOperation("stubj")>]
