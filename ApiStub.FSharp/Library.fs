@@ -55,8 +55,6 @@ module DelegatingHandlers =
     type MockClientHandler(handler : HttpMessageHandler, methods, templateMatcher: TemplateMatcher, responseStubber) = 
         inherit DelegatingHandler(handler)
 
-        new(methods, templateMatcher, responseStubber) = new MockClientHandler(methods, templateMatcher, responseStubber)
-
         override this.SendAsync(request, token) =
             let routeDict = new RouteValueDictionary()
             if methods |> Array.contains(request.Method) |> not then
@@ -99,7 +97,8 @@ module CE =
 
             if httpMessageHandler = null then
                 // add nested handler
-                httpMessageHandler <- new MockClientHandler(methods, templateMatcher.Value, stub)
+                let baseClient = new HttpClientHandler()
+                httpMessageHandler <- new MockClientHandler(baseClient, methods, templateMatcher.Value, stub)
             else
                 httpMessageHandler <- new MockClientHandler(httpMessageHandler, methods, templateMatcher.Value, stub)
 
@@ -174,9 +173,11 @@ module CE =
             |> web_configure_services (fun s ->
                 s.ConfigureAll<HttpClientFactoryOptions>(fun options ->
                     options.HttpMessageHandlerBuilderActions.Add(fun builder ->
-                        builder.AdditionalHandlers.Add(httpMessageHandler) |> ignore
-                        builder.PrimaryHandler <- new HttpClientHandler()
+                        //builder.AdditionalHandlers.Add(httpMessageHandler) |> ignore
+                        builder.PrimaryHandler <- httpMessageHandler
                     )
+
+                    options.HttpClientActions.Add(fun c -> c.BaseAddress <- new Uri("http://127.0.0.1")) |> ignore
                 ) |> ignore
 
                 for custom_config in customConfigureServices do
