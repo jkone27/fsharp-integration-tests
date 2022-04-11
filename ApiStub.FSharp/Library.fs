@@ -64,12 +64,22 @@ module DelegatingHandlers =
             else
                 responseStubber request routeDict
                 |> Task.FromResult
-       
+        
 
 module CE =
     open BuilderExtensions
     open HttpResponseHelpers
     open DelegatingHandlers
+
+    type MockTerminalHandler() = 
+        inherit HttpMessageHandler()
+
+        override this.SendAsync(request, token) =
+            task {
+                let msg = new HttpResponseMessage(HttpStatusCode.BadRequest)
+                msg.Content <- JsonContent.Create({| Error = "No Mocks for This Call" |})
+                return msg
+            }
     
     type TestClient<'T when 'T: not struct>() =
 
@@ -97,7 +107,7 @@ module CE =
 
             if httpMessageHandler = null then
                 // add nested handler
-                let baseClient = new HttpClientHandler()
+                let baseClient = new MockTerminalHandler()
                 httpMessageHandler <- new MockClientHandler(baseClient, methods, templateMatcher.Value, stub)
             else
                 httpMessageHandler <- new MockClientHandler(httpMessageHandler, methods, templateMatcher.Value, stub)
