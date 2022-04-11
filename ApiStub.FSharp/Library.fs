@@ -52,8 +52,10 @@ module HttpResponseHelpers =
 
 module DelegatingHandlers =
     
-    type MockClientHandler(methods, templateMatcher: TemplateMatcher, responseStubber) = 
-        inherit DelegatingHandler()
+    type MockClientHandler(handler : HttpMessageHandler, methods, templateMatcher: TemplateMatcher, responseStubber) = 
+        inherit DelegatingHandler(handler)
+
+        new(methods, templateMatcher, responseStubber) = new MockClientHandler(methods, templateMatcher, responseStubber)
 
         override this.SendAsync(request, token) =
             let routeDict = new RouteValueDictionary()
@@ -74,10 +76,10 @@ module CE =
     type TestClient<'T when 'T: not struct>() =
 
         let factory = new WebApplicationFactory<'T>()
-        let delegatingHandlers = new ResizeArray<DelegatingHandler>()
+        let mutable httpMessageHandler : DelegatingHandler = null
         let customConfigureServices = new ResizeArray<IServiceCollection -> obj>()
 
-        member this.Yield(()) = (factory, delegatingHandlers, customConfigureServices)
+        member this.Yield(()) = (factory, httpMessageHandler, customConfigureServices)
 
         /// generic stub operation with stub function
         [<CustomOperation("stub")>]
@@ -95,7 +97,12 @@ module CE =
             if templateMatcher.IsNone then
                 failwith $"stub: error parsing route template for {routeTemplate}"
 
-            delegatingHandlers.Add(new MockClientHandler(methods, templateMatcher.Value, stub))
+            if httpMessageHandler = null then
+                // add nested handler
+                httpMessageHandler <- new MockClientHandler(methods, templateMatcher.Value, stub)
+            else
+                httpMessageHandler <- new MockClientHandler(httpMessageHandler, methods, templateMatcher.Value, stub)
+
             this
 
         /// stub operation with stub object (HttpResponseMessage)
@@ -167,8 +174,8 @@ module CE =
             |> web_configure_services (fun s ->
                 s.ConfigureAll<HttpClientFactoryOptions>(fun options ->
                     options.HttpMessageHandlerBuilderActions.Add(fun builder ->
-                        for dh in delegatingHandlers do
-                            builder.AdditionalHandlers.Add(dh)
+                        builder.AdditionalHandlers.Add(httpMessageHandler) |> ignore
+                        builder.PrimaryHandler <- new HttpClientHandler()
                     )
                 ) |> ignore
 
