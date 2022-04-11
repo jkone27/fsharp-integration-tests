@@ -55,6 +55,7 @@ module Tests =
 
             use stub = new Stubbery.ApiStub()
             stub.Get("/externalApi", fun r args -> """{ "ok" : "hello" }""" |> box) |> ignore
+            stub.Post("/anotherApi", fun r args -> """{ "ok" : "hello" }""" |> box) |> ignore
 
             let uri : MutableUri = { MockUri = new Uri("http://test") }
 
@@ -87,6 +88,7 @@ module Tests =
             let testApp =
                 test_stubbery () { 
                     GET "/externalApi" (fun r args -> {| Ok = "yeah" |} |> box)
+                    POST "/anotherApi" (fun r args -> {| Ok = "yeah" |} |> box)
                 }
 
             use client = testApp.GetFactory().CreateClient()
@@ -109,6 +111,7 @@ module Tests =
             let testApp =
                 test_stubbery () { 
                     GET "/externalApi" (fun r args -> expected |> box)
+                    POST "/anotherApi" (fun r args -> expected |> box)
                 }
 
             use client = testApp.GetFactory().CreateClient()
@@ -127,7 +130,7 @@ module Tests =
             let testApp =
                 test () { 
                     GETJ "/externalApi" {| Ok = "yeah" |}
-                    POSTJ "/anotherStub" {| Test = "hello" ; Time = 1|}
+                    POSTJ "/anotherApi" {| Test = "hello" ; Time = 1|}
                     POST "/notUsed" (fun _ _ -> "ok" |> R_OK)
                     POST "/notUsed2" (fun _ _ -> "ok" |> R_OK)
                     POST "/errRoute" (fun _ _ -> R_ERROR HttpStatusCode.NotAcceptable (new StringContent("err")))
@@ -154,8 +157,7 @@ module Tests =
                 test () { 
                     GETJ "/notUsed" expected
                     GETJ "/externalApi" expected
-                    POSTJ "/notUsed" expected
-                    
+                    POSTJ "/anotherApi" expected  
                 }
 
             use client = testApp.GetFactory().CreateClient()
