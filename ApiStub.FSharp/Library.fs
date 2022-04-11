@@ -13,6 +13,7 @@ open Microsoft.AspNetCore.Routing
 open System.Net
 open Microsoft.AspNetCore.Http
 open System.Net.Http.Json
+open System.Text.Json
 
 module BuilderExtensions =
 
@@ -35,15 +36,20 @@ module BuilderExtensions =
 
 module HttpResponseHelpers =
 
-    let inline R_OK (x: string) =
+    let inline R_OK contentType content =
         let response = new HttpResponseMessage(HttpStatusCode.OK)
-        response.Content <- new StringContent(x, Text.Encoding.UTF8, "application/json")
+        response.Content <- new StringContent(content, Text.Encoding.UTF8, contentType)
         response
 
+    let inline R_TEXT content =
+        content |> R_OK "text/html"
+
     let inline R_JSON x =
-        let response = new HttpResponseMessage(HttpStatusCode.OK)
-        response.Content <- JsonContent.Create(x)
-        response
+        // this seems to be buggy, causing stream read exception with F# types!!
+        //response.Content <- JsonContent.Create(x)
+        x
+        |> System.Text.Json.JsonSerializer.Serialize
+        |> R_OK "application/json"
 
     let inline R_ERROR statusCode content =
         let response = new HttpResponseMessage(statusCode)
@@ -99,9 +105,10 @@ module CE =
 
         override this.SendAsync(_, token) =
             token.ThrowIfCancellationRequested()
-            let msg = new HttpResponseMessage(HttpStatusCode.BadRequest)
-            msg.Content <- JsonContent.Create({| Error = "No Mocks for This Call" |})
-            Task.FromResult(msg)
+            
+            new StringContent("No Stubs Specified for This Call")
+            |> R_ERROR HttpStatusCode.BadRequest
+            |> Task.FromResult
             
     
     type TestClient<'T when 'T: not struct>() =
@@ -153,7 +160,7 @@ module CE =
         /// string stub
         [<CustomOperation("stubs")>]
         member this.StubString(x, methods, routeTemplate, stub: string) =
-            this.Stub2(x, methods, routeTemplate, stub |> R_OK)
+            this.Stub2(x, methods, routeTemplate, stub |> R_OK "text/html")
 
         /// json stub
         [<CustomOperation("stubj")>]

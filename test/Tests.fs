@@ -134,8 +134,8 @@ module Tests =
                 test () { 
                     GETJ "/externalApi" expected
                     POSTJ "/anotherApi" {| Test = "hello" ; Time = 1|}
-                    POST "/notUsed" (fun _ _ -> "ok" |> R_OK)
-                    POST "/notUsed2" (fun _ _ -> "ok" |> R_OK)
+                    POST "/notUsed" (fun _ _ -> "ok" |> R_TEXT)
+                    POST "/notUsed2" (fun _ _ -> "ok" |> R_TEXT)
                     POST "/errRoute" (fun _ _ -> R_ERROR HttpStatusCode.NotAcceptable (new StringContent("err")))
                 }
 
