@@ -4,7 +4,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageId>ApiStub.FSharp</PackageId>
-    <Version>1.0.0-rc.1</Version>
+    <Version>1.0.0-rc.2</Version>
     <Authors>jkone27</Authors>
     <RequireLicenseAcceptance>false</RequireLicenseAcceptance>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
