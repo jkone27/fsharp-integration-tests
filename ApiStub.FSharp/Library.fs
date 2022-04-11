@@ -90,8 +90,8 @@ module CE =
         member this.Yield(()) = (factory, httpMessageHandler, customConfigureServices)
 
         /// generic stub operation with stub function
-        [<CustomOperation("stub")>]
-        member this.Stub(_, methods, routeTemplate, stub: HttpRequestMessage -> RouteValueDictionary -> HttpResponseMessage) =
+        [<CustomOperation("stub_with_options")>]
+        member this.StubWithOptions(_, methods, routeTemplate, stub: HttpRequestMessage -> RouteValueDictionary -> HttpResponseMessage, useRealHttpClient) =
             
             let routeValueDict = new RouteValueDictionary()
             let templateMatcher = 
@@ -107,15 +107,23 @@ module CE =
 
             if httpMessageHandler = null then
                 // add nested handler
-                let baseClient = new MockTerminalHandler()
+                let baseClient : HttpMessageHandler = 
+                    if useRealHttpClient then 
+                        new HttpClientHandler()
+                    else
+                        new MockTerminalHandler()
                 httpMessageHandler <- new MockClientHandler(baseClient, methods, templateMatcher.Value, stub)
             else
                 httpMessageHandler <- new MockClientHandler(httpMessageHandler, methods, templateMatcher.Value, stub)
 
             this
 
-        /// stub operation with stub object (HttpResponseMessage)
         [<CustomOperation("stub")>]
+        member this.Stub(x, methods, routeTemplate, stub: HttpRequestMessage -> RouteValueDictionary -> HttpResponseMessage)=
+            this.StubWithOptions(x, methods, routeTemplate, stub, false)
+
+        /// stub operation with stub object (HttpResponseMessage)
+        [<CustomOperation("stub_obj")>]
         member this.Stub2(x, methods, routeTemplate, stub: HttpResponseMessage) =
             this.Stub(x, methods, routeTemplate, fun _ _ -> stub)
 
