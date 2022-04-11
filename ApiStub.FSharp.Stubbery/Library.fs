@@ -36,28 +36,28 @@ module StubberyCE =
             stubbery
                 .Request(methods)
                 .IfRoute(route)
-                .Response(fun r args -> stub r args) |> ignore
+                .Response(fun r args -> stub r args |> box) |> ignore
             this
 
-        [<CustomOperation("stub")>]
-        member this.Stub2(x, methods, route, stub) =
-            this.Stub(x, methods, route, fun r args -> stub |> box)
+        [<CustomOperation("stub_obj")>]
+        member this.StubObj(x, methods, route, stub) =
+            this.Stub(x, methods, route, fun _ _ -> stub)
 
         [<CustomOperation("GET")>]
         member this.Get(x, route, stub) =
             this.Stub(x, [|HttpMethod.Get|], route, stub)
 
-        [<CustomOperation("GET")>]
-        member this.Get2(x, route, stub) =
-            this.Stub2(x, [|HttpMethod.Get|], route, stub)
+        [<CustomOperation("GET_OBJ")>]
+        member this.GetObj(x, route, stub) =
+            this.StubObj(x, [|HttpMethod.Get|], route, stub)
 
         [<CustomOperation("POST")>]
         member this.Post(x, route, stub) =
             this.Stub(x, [|HttpMethod.Post|], route, stub)
 
-        [<CustomOperation("POST")>]
-        member this.Post2(x, route, stub) =
-            this.Stub2(x, [|HttpMethod.Post|], route, stub)
+        [<CustomOperation("POST_OBJ")>]
+        member this.PostObj(x, route, stub) =
+            this.StubObj(x, [|HttpMethod.Post|], route, stub)
 
         [<CustomOperation("PUT")>]
         member this.Put(x, route, stub) =
