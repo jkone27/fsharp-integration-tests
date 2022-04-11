@@ -44,12 +44,16 @@ module HttpResponseHelpers =
     let inline R_TEXT content =
         content |> R_OK "text/html"
 
-    let inline R_JSON x =
-        // this seems to be buggy, causing stream read exception with F# types!!
-        //response.Content <- JsonContent.Create(x)
+    let inline R_JSON (x : obj) =
         x
         |> System.Text.Json.JsonSerializer.Serialize
         |> R_OK "application/json"
+
+    let inline R_JSON_CONTENT (x : obj) =
+        // this seems to be buggy, causing stream read exception with F# types!!
+        let response = new HttpResponseMessage(HttpStatusCode.OK)
+        response.Content <- JsonContent.Create(inputValue=x)
+        response
 
     let inline R_ERROR statusCode content =
         let response = new HttpResponseMessage(statusCode)
@@ -68,8 +72,10 @@ module DelegatingHandlers =
             else if templateMatcher.TryMatch(request.RequestUri.AbsolutePath |> PathString, routeDict) |> not then
                 base.SendAsync(request, token)
             else
-                responseStubber request routeDict
-                |> Task.FromResult
+                task {
+                    let expected = responseStubber request routeDict
+                    return expected
+                }
         
 
 module CE =
@@ -160,11 +166,11 @@ module CE =
         /// string stub
         [<CustomOperation("stubs")>]
         member this.StubString(x, methods, routeTemplate, stub: string) =
-            this.Stub2(x, methods, routeTemplate, stub |> R_OK "text/html")
+            this.Stub2(x, methods, routeTemplate, stub |> R_TEXT)
 
         /// json stub
         [<CustomOperation("stubj")>]
-        member this.StubJson(x, methods, routeTemplate, stub) =
+        member this.StubJson(x, methods, routeTemplate, stub: obj) =
             this.Stub2(x, methods, routeTemplate, stub |> R_JSON)
 
         /// stub GET request with stub function
