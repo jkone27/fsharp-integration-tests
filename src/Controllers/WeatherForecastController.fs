@@ -56,7 +56,7 @@ type HelloController(logger: ILogger<WeatherForecastController>, httpClientFacto
 
             let anotherApiClient = httpClientFactory.CreateClient("anotherApiClient")
 
-            let! res2 = anotherApiClient.PostAsJsonAsync("/anotherApi", {| Test="Ok" |})
+            let! res2 = anotherApiClient.PostAsJsonAsync("/anotherApi?test=123", {| Test="Ok" |})
                 
             res2.EnsureSuccessStatusCode() |> ignore
 

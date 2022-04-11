@@ -17,6 +17,7 @@ open Microsoft.AspNetCore.Routing
 open System.Net
 open System.Text.Json
 open Microsoft.AspNetCore.Http
+open System.Net.Http.Json
 
 open ApiStub.FSharp
 
@@ -127,9 +128,11 @@ module Tests =
 
         task {
 
+            let expected = {| Ok = "yeah" |}
+
             let testApp =
                 test () { 
-                    GETJ "/externalApi" {| Ok = "yeah" |}
+                    GETJ "/externalApi" expected
                     POSTJ "/anotherApi" {| Test = "hello" ; Time = 1|}
                     POST "/notUsed" (fun _ _ -> "ok" |> R_OK)
                     POST "/notUsed2" (fun _ _ -> "ok" |> R_OK)
@@ -140,11 +143,11 @@ module Tests =
 
             let! r = client.GetAsync("/Hello")
 
-            let! rr =
-                r.EnsureSuccessStatusCode()
-                    .Content.ReadAsStringAsync()
+            r.EnsureSuccessStatusCode() |> ignore
 
-            Assert.NotEmpty(rr)
+            let! rr = r.Content.ReadFromJsonAsync<MyOpenapi.Hello>()
+
+            Assert.Equal(expected.Ok, rr.Ok)
         } 
 
     [<Fact>]
@@ -176,7 +179,8 @@ module Tests =
 
             let testApp =
                 test () { 
-                    POSTJ "/another" expected
+                    GETJ "/externalApi" expected
+                    POSTJ "/anotherApi" expected  
                 }
 
             //let privateMock = new MockClientHandler()

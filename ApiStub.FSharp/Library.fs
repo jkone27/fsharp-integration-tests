@@ -59,7 +59,7 @@ module DelegatingHandlers =
             let routeDict = new RouteValueDictionary()
             if methods |> Array.contains(request.Method) |> not then
                 base.SendAsync(request, token)
-            else if templateMatcher.TryMatch(request.RequestUri.PathAndQuery |> PathString, routeDict) |> not then
+            else if templateMatcher.TryMatch(request.RequestUri.AbsolutePath |> PathString, routeDict) |> not then
                 base.SendAsync(request, token)
             else
                 responseStubber request routeDict
