@@ -40,8 +40,8 @@ module StubberyCE =
             this
 
         [<CustomOperation("stub_obj")>]
-        member this.StubObj(x, methods, route, stub) =
-            this.Stub(x, methods, route, fun _ _ -> stub)
+        member this.StubObj(x, methods, route, stub : unit -> obj) =
+            this.Stub(x, methods, route, fun _ _ -> stub())
 
         [<CustomOperation("GET")>]
         member this.Get(x, route, stub) =
@@ -49,7 +49,7 @@ module StubberyCE =
 
         [<CustomOperation("GET_OBJ")>]
         member this.GetObj(x, route, stub) =
-            this.StubObj(x, [|HttpMethod.Get|], route, stub)
+            this.StubObj(x, [|HttpMethod.Get|], route, fun _ -> stub)
 
         [<CustomOperation("POST")>]
         member this.Post(x, route, stub) =
@@ -57,7 +57,7 @@ module StubberyCE =
 
         [<CustomOperation("POST_OBJ")>]
         member this.PostObj(x, route, stub) =
-            this.StubObj(x, [|HttpMethod.Post|], route, stub)
+            this.StubObj(x, [|HttpMethod.Post|], route, fun _ -> stub)
 
         [<CustomOperation("PUT")>]
         member this.Put(x, route, stub) =
