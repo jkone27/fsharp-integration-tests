@@ -151,6 +151,40 @@ module Tests =
         } 
 
     [<Fact>]
+    let ``test with extension works two clients`` () =
+
+        task {
+
+            let expected = {| Ok = "yeah" |}
+
+            let testApp =
+                test () { 
+                    GETJ "/externalApi" expected
+                    POST "/anotherApi" (fun _ _ -> {| Test = "hello" ; Time = 1|} |> R_JSON)
+                    POST "/notUsed" (fun _ _ -> "ok" |> R_TEXT)
+                    POST "/notUsed2" (fun _ _ -> "ok" |> R_TEXT)
+                    POST "/errRoute" (fun _ _ -> R_ERROR HttpStatusCode.NotAcceptable (new StringContent("err")))
+                }
+
+            let factory = testApp.GetFactory()
+
+            let client = factory.CreateClient()
+
+            let! r = client.GetAsync("/Hello")
+
+            r.EnsureSuccessStatusCode() |> ignore
+
+            let! rr = r.Content.ReadFromJsonAsync<MyOpenapi.Hello>()
+
+            Assert.Equal(expected.Ok, rr.Ok)
+
+            let! r2 = client.GetAsync("/Hello")
+
+            r2.EnsureSuccessStatusCode() |> ignore
+
+        } 
+
+    [<Fact>]
     let ``test with swagger gen client for json apis`` () =
 
         task {

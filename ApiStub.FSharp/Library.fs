@@ -110,11 +110,13 @@ module CE =
         inherit HttpMessageHandler()
 
         override this.SendAsync(_, token) =
-            token.ThrowIfCancellationRequested()
+            task {
+                token.ThrowIfCancellationRequested()
             
-            new StringContent("No Stubs Specified for This Call")
-            |> R_ERROR HttpStatusCode.BadRequest
-            |> Task.FromResult
+                return 
+                    new StringContent("No Stubs Specified for This Call")
+                    |> R_ERROR HttpStatusCode.BadRequest
+            }
             
     
     type TestClient<'T when 'T: not struct>() =
@@ -148,7 +150,7 @@ module CE =
                         new HttpClientHandler()
                     else
                         new MockTerminalHandler()
-                httpMessageHandler <- new MockClientHandler(new ResponseStreamWrapperHandler(baseClient), methods, templateMatcher.Value, stub)
+                httpMessageHandler <- new MockClientHandler(baseClient, methods, templateMatcher.Value, stub)
             else
                 httpMessageHandler <- new MockClientHandler(httpMessageHandler, methods, templateMatcher.Value, stub)
 
@@ -160,18 +162,18 @@ module CE =
 
         /// stub operation with stub object (HttpResponseMessage)
         [<CustomOperation("stub_obj")>]
-        member this.Stub2(x, methods, routeTemplate, stub: HttpResponseMessage) =
-            this.Stub(x, methods, routeTemplate, fun _ _ -> stub)
+        member this.StubObj(x, methods, routeTemplate, stub: unit -> HttpResponseMessage) =
+            this.Stub(x, methods, routeTemplate, fun _ _ -> stub())
 
         /// string stub
         [<CustomOperation("stubs")>]
         member this.StubString(x, methods, routeTemplate, stub: string) =
-            this.Stub2(x, methods, routeTemplate, stub |> R_TEXT)
+            this.StubObj(x, methods, routeTemplate, fun _ -> stub |> R_TEXT)
 
         /// json stub
         [<CustomOperation("stubj")>]
         member this.StubJson(x, methods, routeTemplate, stub: obj) =
-            this.Stub2(x, methods, routeTemplate, stub |> R_JSON)
+            this.StubObj(x, methods, routeTemplate, fun _ -> stub |> R_JSON)
 
         /// stub GET request with stub function
         [<CustomOperation("GET")>]
@@ -181,7 +183,7 @@ module CE =
         /// stub GET request with stub object
         [<CustomOperation("GET")>]
         member this.Get2(x, route, stub) =
-            this.Stub2(x, [|HttpMethod.Get|], route, stub)
+            this.StubObj(x, [|HttpMethod.Get|], route, stub)
 
         /// stub GET json
         [<CustomOperation("GETJ")>]
@@ -243,3 +245,8 @@ module CE =
         interface IDisposable 
                 with member this.Dispose() =
                         factory.Dispose()
+
+        interface IAsyncDisposable
+                with member this.DisposeAsync() =
+                        factory.DisposeAsync()
+                    
