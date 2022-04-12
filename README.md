@@ -11,26 +11,26 @@ Important, to use the CE, you have to build your CE object first by passing the 
 ## Usage
 
 ```fsharp
-open ApiStub.FSharp
+open ApiStub.FSharp.CE
+open ApiStub.FSharp.BuilderExtensions
+open ApiStub.FSharp.HttpResponseHelpers
 open Xunit
 
 module Tests =
 
-    open CE
-    open BuilderExtensions
-    open HttpResponseHelpers
-
     // build your aspnetcore integration testing CE
-    let test () = new CE.TestClient<Startup>()
+    let test () = new TestClient<Startup>()
 
     [<Fact>]
-    let ``test with extension works no stubbery`` () =
+    let ``Integration test calls Hello and returns Success`` () =
 
         task {
 
             let testApp =
                 test () { 
                     GETJ "/externalApi" {| Ok = "yeah" |}
+                    POSTJ "/anotherApi" {| Whatever = "yeah" |}
+                    GETJ "/yetAnotherOne" {| Success = true |}
                 }
 
             use client = testApp.GetFactory().CreateClient()
@@ -45,21 +45,19 @@ module Tests =
 ## ApiStub.FSharp.Stubbery
 
 ```fsharp
-open ApiStub.FSharp.Stubbery
+open ApiStub.FSharp.Stubbery.StubberyCE
+open ApiStub.FSharp.BuilderExtensions
+open ApiStub.FSharp.HttpResponseHelpers
 open Xunit
 
 module Tests =
 
-    open CE
-    open BuilderExtensions
-    open HttpResponseHelpers
-
     // build your aspnetcore integration testing CE using Stubbery library
     // for serving HTTP stubs
-    let test_stubbery () = new Stubbery.StubberyCE.TestStubberyClient<Startup>()
+    let test_stubbery () = new TestStubberyClient<Startup>()
 
     [<Fact>]
-    let ``test with extension works no stubbery`` () =
+    let ``Integration test with stubbery`` () =
 
         task {
 
