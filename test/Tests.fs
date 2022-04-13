@@ -190,14 +190,14 @@ module Tests =
         task {
             let expected =  {| Ok = "yeah" |}
 
-            let testApp =
+            use testApp =
                 test () { 
                     GETJ "/notUsed" expected
                     GETJ "/externalApi" expected
                     POSTJ "/anotherApi" expected  
                 }
 
-            use client = testApp.GetFactory().CreateClient()
+            let client = testApp.GetFactory().CreateClient()
             let typedClient = new MyOpenapi.Client(client)
 
             let! r = typedClient.GetHello()
@@ -211,10 +211,10 @@ module Tests =
         task {
             let expected =  {| Ok = "yeah" |}
 
-            let testApp =
+            use testApp =
                 test () { 
                     GETJ "/externalApi" expected
-                    POSTJ "/anotherApi" expected  
+                    POSTJ "/test/anotherApi" expected  
                 }
 
             //let privateMock = new MockClientHandler()
@@ -222,13 +222,20 @@ module Tests =
             let factory = 
                 testApp.GetFactory()
                 |> web_configure_test_services (fun t -> 
-                    t.AddHttpClient("customClient", configureClient =
-                        (fun c -> c.BaseAddress <- new Uri("http://localhost/else"))
+                    t.AddHttpClient("anotherApiClient", configureClient =
+                        (fun c -> c.BaseAddress <- new Uri("http://localhost/test/"))
                     )
                 )
                 
             let clientFactory = factory.Services.GetRequiredService<IHttpClientFactory>()
-            let customClient = clientFactory.CreateClient("customClient")
+            let customClient = clientFactory.CreateClient("anotherApiClient")
 
-            Assert.Equal("http://localhost/else", customClient.BaseAddress.ToString())
+            Assert.Equal("http://localhost/test/", customClient.BaseAddress.ToString())
+
+            let client = factory.CreateClient()
+            let typedClient = new MyOpenapi.Client(client)
+
+            let! r = typedClient.GetHello()
+
+            Assert.Equal(expected.Ok, r.Ok)
         }

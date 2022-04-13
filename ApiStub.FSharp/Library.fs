@@ -116,8 +116,7 @@ module CE =
                 return 
                     new StringContent("No Stubs Specified for This Call")
                     |> R_ERROR HttpStatusCode.BadRequest
-            }
-            
+            }         
     
     type TestClient<'T when 'T: not struct>() =
 
