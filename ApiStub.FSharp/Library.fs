@@ -128,12 +128,13 @@ module CE =
 
         /// generic stub operation with stub function
         [<CustomOperation("stub_with_options")>]
-        member this.StubWithOptions(_, methods, routeTemplate, stub: HttpRequestMessage -> RouteValueDictionary -> HttpResponseMessage, useRealHttpClient) =
+        member this.StubWithOptions(_, methods, routeTemplate : string, stub: HttpRequestMessage -> RouteValueDictionary -> HttpResponseMessage, useRealHttpClient) =
             
             let routeValueDict = new RouteValueDictionary()
             let templateMatcher = 
                 try
-                    let rt = TemplateParser.Parse(routeTemplate)
+
+                    let rt = TemplateParser.Parse(routeTemplate.TrimStart('/'))
                     let tm = new TemplateMatcher(rt, routeValueDict)
                     Some(tm)
                 with _ ->
@@ -232,7 +233,16 @@ module CE =
                         builder.PrimaryHandler <- httpMessageHandler
                     )
 
-                    options.HttpClientActions.Add(fun c -> c.BaseAddress <- new Uri("http://127.0.0.1")) |> ignore
+                    options.HttpClientActions.Add(fun c -> 
+                        let path =
+                            if c.BaseAddress <> null then
+                                c.BaseAddress.AbsolutePath
+                            else
+                                String.Empty
+
+                        let newBase = new Uri(new Uri("http://127.0.0.1/"), path)
+                        c.BaseAddress <- newBase
+                    ) |> ignore
                 ) |> ignore
 
                 for custom_config in customConfigureServices do

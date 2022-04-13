@@ -34,6 +34,13 @@ type Startup(configuration: IConfiguration, env: IWebHostEnvironment) =
                 ()
         )
 
+        services.AddHttpClient("anotherApiClient",
+            configureClient = fun httpClient ->
+                //generate your public request bin and replace here
+                httpClient.BaseAddress <- new Uri("https://enfir17jla5z.x.pipedream.net/another/")
+                ()
+        )
+
         services.AddEndpointsApiExplorer()
         services.AddSwaggerGen()
         ()
