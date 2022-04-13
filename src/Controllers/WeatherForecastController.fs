@@ -44,19 +44,21 @@ type HelloController(logger: ILogger<WeatherForecastController>, httpClientFacto
 
     inherit ControllerBase()
 
+    // https://stackoverflow.com/questions/23438416/why-is-httpclient-baseaddress-not-working
+
     [<HttpGet>]
     member _.GetAsync() =
         task {
 
             let externalApiClient = httpClientFactory.CreateClient("externalApiClient")
 
-            let! res = externalApiClient.GetAsync("/externalApi")
+            let! res = externalApiClient.GetAsync("externalApi")
 
             res.EnsureSuccessStatusCode() |> ignore
 
-            let anotherApiClient = httpClientFactory.CreateClient("anotherApiClient")
+            let anotherApiClient = httpClientFactory.CreateClient("anotherApiClient") 
 
-            let! res2 = anotherApiClient.PostAsJsonAsync("/anotherApi?test=123", {| Test="Ok" |})
+            let! res2 = anotherApiClient.PostAsJsonAsync("anotherApi?test=123", {| Test="Ok" |})
                 
             res2.EnsureSuccessStatusCode() |> ignore
 

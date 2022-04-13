@@ -18,6 +18,7 @@ open System.Net
 open System.Text.Json
 open Microsoft.AspNetCore.Http
 open System.Net.Http.Json
+open Swensen.Unquote
 
 open ApiStub.FSharp
 
@@ -31,8 +32,8 @@ module Tests =
     open BuilderExtensions
     open HttpResponseHelpers
 
-    let test_stubbery () = new Stubbery.StubberyCE.TestStubberyClient<Startup>()
-    let test () = new CE.TestClient<Startup>()
+    let testce_stubbery () = new Stubbery.StubberyCE.TestStubberyClient<Startup>()
+    let testce () = new CE.TestClient<Startup>()
 
     [<Fact>]
     let ``GET weather returns a not null Date`` () =
@@ -87,7 +88,7 @@ module Tests =
         task {
 
             let testApp =
-                test_stubbery () { 
+                testce_stubbery () { 
                     GET "/externalApi" (fun r args -> {| Ok = "yeah" |} |> box)
                     POST "/anotherApi" (fun r args -> {| Ok = "yeah" |} |> box)
                 }
@@ -110,7 +111,7 @@ module Tests =
             let expected =  {| Ok = "yeah" |}
 
             let testApp =
-                test_stubbery () { 
+                testce_stubbery () { 
                     GET "/externalApi" (fun r args -> expected |> box)
                     POST "/anotherApi" (fun r args -> expected |> box)
                 }
@@ -131,9 +132,9 @@ module Tests =
             let expected = {| Ok = "yeah" |}
 
             let testApp =
-                test () { 
+                testce () { 
                     GETJ "/externalApi" expected
-                    POSTJ "/anotherApi" {| Test = "hello" ; Time = 1|}
+                    POSTJ "/another/anotherApi" {| Test = "hello" ; Time = 1|}
                     POST "/notUsed" (fun _ _ -> "ok" |> R_TEXT)
                     POST "/notUsed2" (fun _ _ -> "ok" |> R_TEXT)
                     POST "/errRoute" (fun _ _ -> R_ERROR HttpStatusCode.NotAcceptable (new StringContent("err")))
@@ -158,9 +159,9 @@ module Tests =
             let expected = {| Ok = "yeah" |}
 
             let testApp =
-                test () { 
+                testce () { 
                     GETJ "/externalApi" expected
-                    POST "/anotherApi" (fun _ _ -> {| Test = "hello" ; Time = 1|} |> R_JSON)
+                    POST "/another/anotherApi" (fun _ _ -> {| Test = "hello" ; Time = 1|} |> R_JSON)
                     POST "/notUsed" (fun _ _ -> "ok" |> R_TEXT)
                     POST "/notUsed2" (fun _ _ -> "ok" |> R_TEXT)
                     POST "/errRoute" (fun _ _ -> R_ERROR HttpStatusCode.NotAcceptable (new StringContent("err")))
@@ -190,14 +191,14 @@ module Tests =
         task {
             let expected =  {| Ok = "yeah" |}
 
-            let testApp =
-                test () { 
+            use testApp =
+                testce () { 
                     GETJ "/notUsed" expected
                     GETJ "/externalApi" expected
-                    POSTJ "/anotherApi" expected  
+                    POSTJ "/another/anotherApi" expected  
                 }
 
-            use client = testApp.GetFactory().CreateClient()
+            let client = testApp.GetFactory().CreateClient()
             let typedClient = new MyOpenapi.Client(client)
 
             let! r = typedClient.GetHello()
@@ -206,29 +207,62 @@ module Tests =
         } 
 
     [<Fact>]
-    let ``check custom client override still allowed`` () =
+    let ``check custom client override still allowed before`` () =
 
         task {
             let expected =  {| Ok = "yeah" |}
 
-            let testApp =
-                test () { 
-                    GETJ "/externalApi" expected
-                    POSTJ "/anotherApi" expected  
+            use testApp =
+                testce () { 
+                    GETJ "externalApi" expected
+                    POSTJ "another/anotherApi" expected  
                 }
 
-            //let privateMock = new MockClientHandler()
+            let factory = testApp.GetFactory()
+                
+            let clientFactory = factory.Services.GetRequiredService<IHttpClientFactory>()
+            let customClient = clientFactory.CreateClient("anotherApiClient")
+
+            Assert.True(customClient.BaseAddress.ToString().EndsWith("another/"))
+
+            let client = factory.CreateClient()
+            let typedClient = new MyOpenapi.Client(client)
+
+            let! r = typedClient.GetHello()
+
+            test <@ expected.Ok = r.Ok @>
+        }
+
+    [<Fact>]
+    let ``check custom client override still allowed after`` () =
+
+        task {
+
+            let expected =  {| Ok = "yeah" |}
+
+            use testApp =
+                testce () { 
+                    GETJ "externalApi" expected
+                    POSTJ "test/anotherApi" expected  
+                }
 
             let factory = 
                 testApp.GetFactory()
                 |> web_configure_test_services (fun t -> 
-                    t.AddHttpClient("customClient", configureClient =
-                        (fun c -> c.BaseAddress <- new Uri("http://localhost/else"))
+                    t.AddHttpClient("anotherApiClient", configureClient =
+                        (fun c -> c.BaseAddress <- new Uri("http://localhost/test/"))
                     )
                 )
                 
             let clientFactory = factory.Services.GetRequiredService<IHttpClientFactory>()
-            let customClient = clientFactory.CreateClient("customClient")
+            let customClient = clientFactory.CreateClient("anotherApiClient")
 
-            Assert.Equal("http://localhost/else", customClient.BaseAddress.ToString())
+            Assert.Equal("http://localhost/test/", customClient.BaseAddress.ToString())
+
+            let client = factory.CreateClient()
+            let typedClient = new MyOpenapi.Client(client)
+
+            let! r = typedClient.GetHello()
+
+            test <@ expected.Ok = r.Ok @>
         }
