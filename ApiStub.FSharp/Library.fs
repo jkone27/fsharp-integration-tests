@@ -61,21 +61,29 @@ module HttpResponseHelpers =
         response
 
 module DelegatingHandlers =
+
+    type internal AsyncCallableHandler(messageHandler) =
+        inherit DelegatingHandler(messageHandler)
+        member internal x.CallSendAsync(request, cancellationToken) =
+            base.SendAsync(request, cancellationToken)
     
     type MockClientHandler(handler : HttpMessageHandler, methods, templateMatcher: TemplateMatcher, responseStubber) = 
         inherit DelegatingHandler(handler)
 
         override this.SendAsync(request, token) =
-            let routeDict = new RouteValueDictionary()
-            if methods |> Array.contains(request.Method) |> not then
-                base.SendAsync(request, token)
-            else if templateMatcher.TryMatch(request.RequestUri.AbsolutePath |> PathString, routeDict) |> not then
-                base.SendAsync(request, token)
-            else
-                task {
-                    let expected = responseStubber request routeDict
+            let wrappedBase = new AsyncCallableHandler(base.InnerHandler) 
+            task {
+                let routeDict = new RouteValueDictionary()
+                if methods |> Array.contains(request.Method) |> not then
+                    return! wrappedBase.CallSendAsync(request, token)
+                else if templateMatcher.TryMatch(request.RequestUri.AbsolutePath |> PathString, routeDict) |> not then
+                    return! wrappedBase.CallSendAsync(request, token)
+                else
+                    let mutable expected : HttpResponseMessage = responseStubber request routeDict
+                    // reattach original request!!!
+                    expected.RequestMessage <- request
                     return expected
-                }
+            }
         
 
 module CE =
@@ -83,15 +91,16 @@ module CE =
     open HttpResponseHelpers
     open DelegatingHandlers
 
+    /// NOT IN USE, check if needed
     type ResponseStreamWrapperHandler(handler:  HttpMessageHandler) =
-        inherit HttpMessageHandler()
+        inherit DelegatingHandler(handler)
 
         override this.SendAsync(request, cancellationToken) =
             
-            let baseSend = base.SendAsync(request, cancellationToken)
+            let wrappedBase = new AsyncCallableHandler(base.InnerHandler) 
             
             task {
-                let! response = baseSend
+                let! response = wrappedBase.CallSendAsync(request, cancellationToken);
 
                 let! bytes = response.Content.ReadAsByteArrayAsync(cancellationToken)
 
