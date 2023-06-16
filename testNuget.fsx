@@ -1,5 +1,5 @@
 #i """nuget:C:\Repositories\fsharp-integration-tests\ApiStub.FSharp\bin\Debug"""
-#r "nuget:ApiStub.FSharp,1.0.1-alpha"
+#r "nuget:ApiStub.FSharp,1.0.0-rc.9"
 #r "nuget: Microsoft.Extensions.Hosting"
 #r "nuget: Microsoft.Extensions.DependencyInjection"
 
