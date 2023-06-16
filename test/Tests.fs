@@ -139,8 +139,17 @@ module Tests =
                     POST "/notUsed2" (fun _ _ -> "ok" |> R_TEXT)
                     POST "/errRoute" (fun _ _ -> R_ERROR HttpStatusCode.NotAcceptable (new StringContent("err")))
                 }
+            
+            let factory = testApp.GetFactory()
 
-            use client = testApp.GetFactory().CreateClient()
+            use internalClient : HttpClient =  factory.Services.GetRequiredService<HttpClient>()
+
+            let! internalResponse = internalClient.GetAsync("externalApi")
+
+            // can be used by client middleware
+            Assert.NotNull(internalResponse.RequestMessage);
+
+            use client = factory.CreateClient()
 
             let! r = client.GetAsync("/Hello")
 
