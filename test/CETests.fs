@@ -1,4 +1,4 @@
-﻿namespace test
+﻿namespace ApiStub.FSharp.Tests
 
 open Xunit
 open fsharpintegrationtests
@@ -28,7 +28,7 @@ type MyOpenapi = OpenApiClientProvider<"swagger.json">
 
 type MutableUri = Stubbery.StubberyCE.MutableUri 
 
-type Tests() =
+type CETests() =
 
     let testce = new CE.TestClient<Startup>()
 
@@ -51,8 +51,39 @@ type Tests() =
             Assert.NotNull(forecast.[0].Date)
         }
 
+    
     [<Fact>]
-    member this.``test with extension works no stubbery`` () =
+    member this.``test CE works stubbed client had valid http response and inner request with content`` () =
+
+        task {
+
+            let testApp =
+                testce { 
+                    POSTJ "/stub-this-post" {| Ok = "yeah" |}
+                }
+            
+            use internalClient : HttpClient =  testApp.GetFactory().Services.GetRequiredService<HttpClient>()
+
+            // call an endpoint not invoked/used with a body, to check request content
+            let! response = internalClient.PostAsJsonAsync("/stub-this-post", {| Test = "hey" |})
+
+            // can be used by client "middleware" in http client factory (delegating handlers / http message handlers)
+            Assert.NotNull(response.RequestMessage);
+
+            let! testMessage = response.RequestMessage.Content.ReadFromJsonAsync<{| Test: string |}>()
+
+            Assert.Equal("hey", testMessage.Test)
+
+            // read response and check it matched the stub body
+
+            let! responseObj = response.Content.ReadFromJsonAsync<{| Ok: string |}>()
+
+            Assert.Equal("yeah", responseObj.Ok)
+        } 
+
+
+    [<Fact>]
+    member this.``test CE works stubbing multiple endpoints`` () =
 
         task {
 
@@ -74,16 +105,7 @@ type Tests() =
             let! internalResponse = internalClient.GetAsync("externalApi")
 
             // can be used by client middleware
-            Assert.NotNull(internalResponse.RequestMessage);
-
-            // call an endpoint not invoked/used with a body, to check request content
-            let! notUsedCall = 
-                internalClient.PostAsJsonAsync("notUsed", {| Test = "hey" |})
-
-            let! testMessage = 
-                notUsedCall.RequestMessage.Content.ReadFromJsonAsync<{| Test: string |}>()
-
-            Assert.Equal("hey", testMessage.Test)
+            Assert.NotNull(internalResponse.RequestMessage)
 
             use client = factory.CreateClient()
 

@@ -1,4 +1,4 @@
-namespace test
+namespace ApiStub.FSharp.Tests
 
 open Xunit
 open fsharpintegrationtests
