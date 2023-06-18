@@ -6,6 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Tests.fs" />
+    <Compile Include="StubberyTests.fs" />
     <Content Include="swagger.json" />
     <Compile Include="Program.fs" />
   </ItemGroup>

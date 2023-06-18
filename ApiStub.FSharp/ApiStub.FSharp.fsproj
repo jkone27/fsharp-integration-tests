@@ -23,7 +23,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Library.fs" />
+    <Compile Include="BuilderExtensions.fs" />
+    <Compile Include="HttpResponseHelpers.fs" />
+    <Compile Include="DelegatingHandlers.fs" />
+    <Compile Include="CE.fs" />
   </ItemGroup>
 
   <ItemGroup>
