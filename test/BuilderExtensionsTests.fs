@@ -24,13 +24,13 @@ open ApiStub.FSharp.BuilderExtensions
 open ApiStub.FSharp.HttpResponseHelpers
 open ApiStub.FSharp
 
-type ISomeSingelton =
+type ISomeSingleton =
     interface
     end
 
 type SomeSingleton(name: string) =
     class
-        interface ISomeSingelton
+        interface ISomeSingleton
     end
 
 type BuilderExtensionsTests() =
@@ -47,12 +47,12 @@ type BuilderExtensionsTests() =
             let testApp = testce {
                     GETJ "hello" {| ResponseCode = 1001 |}
                     WITH_SERVICES (fun (s: IServiceCollection) -> 
-                        s.AddSingleton<ISomeSingelton>(new SomeSingleton("John")))
+                        s.AddSingleton<ISomeSingleton>(new SomeSingleton("John")))
                 }
 
             let fac = testApp.GetFactory()
 
-            let singleton = fac.Services.GetRequiredService<ISomeSingelton>()
+            let singleton = fac.Services.GetRequiredService<ISomeSingleton>()
 
             Assert.NotNull(singleton)
 
@@ -68,19 +68,19 @@ type BuilderExtensionsTests() =
     member this.``WITH_TEST_SERVICES registers correctly``() = 
         task {
 
-            let singletonMock = { new ISomeSingelton }
+            let singletonMock = { new ISomeSingleton }
         
             let testApp = testce {
                     GETJ "hello" {| ResponseCode = 1001 |}
-                    WITH_SERVICES (fun s -> 
-                        s.AddSingleton<ISomeSingelton>(new SomeSingleton("John")))
+                    WITH_SERVICES (fun (s: IServiceCollection) -> 
+                        s.AddSingleton<ISomeSingleton>(new SomeSingleton("John")))
                     WITH_TEST_SERVICES (fun s -> 
                         s.AddSingleton(singletonMock))
                 }
 
             let fac = testApp.GetFactory()
 
-            let singleton = fac.Services.GetRequiredService<SomeSingleton>()
+            let singleton = fac.Services.GetRequiredService<ISomeSingleton>()
 
             Assert.NotNull(singleton)
             Assert.Same(singletonMock, singleton)
