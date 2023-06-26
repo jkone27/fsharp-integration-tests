@@ -1,7 +1,8 @@
-#i """nuget:C:\Repositories\fsharp-integration-tests\ApiStub.FSharp\bin\Debug"""
-#r "nuget:ApiStub.FSharp,1.0.0-rc.9"
+// #i """nuget:C:\Repositories\fsharp-integration-tests\ApiStub.FSharp\bin\Debug"""
+#r "nuget: ApiStub.FSharp, 1.0.0-rc.9"
 #r "nuget: Microsoft.Extensions.Hosting"
 #r "nuget: Microsoft.Extensions.DependencyInjection"
+#r "nuget: Microsoft.Extensions.DependencyInjection.Abstractions"
 
 open ApiStub.FSharp
 open Microsoft.AspNetCore

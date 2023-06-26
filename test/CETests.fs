@@ -1,4 +1,4 @@
-﻿namespace test
+﻿namespace ApiStub.FSharp.Tests
 
 open Xunit
 open fsharpintegrationtests
@@ -19,24 +19,24 @@ open System.Text.Json
 open Microsoft.AspNetCore.Http
 open System.Net.Http.Json
 open Swensen.Unquote
-
+open ApiStub.FSharp.CE
+open ApiStub.FSharp.BuilderExtensions
+open ApiStub.FSharp.HttpResponseHelpers
 open ApiStub.FSharp
 
 type MyOpenapi = OpenApiClientProvider<"swagger.json">
 
 type MutableUri = Stubbery.StubberyCE.MutableUri 
 
-module Tests =
+type CETests() =
 
-    open CE
-    open BuilderExtensions
-    open HttpResponseHelpers
+    let testce = new CE.TestClient<Startup>()
 
-    let testce_stubbery () = new Stubbery.StubberyCE.TestStubberyClient<Startup>()
-    let testce () = new CE.TestClient<Startup>()
+    interface IDisposable with
+        member this.Dispose() = (testce :> IDisposable).Dispose()
 
     [<Fact>]
-    let ``GET weather returns a not null Date`` () =
+    member this.``GET weather returns a not null Date`` () =
 
         let application = new WebApplicationFactory<Startup>()
 
@@ -51,88 +51,46 @@ module Tests =
             Assert.NotNull(forecast.[0].Date)
         }
 
+    
     [<Fact>]
-    let ``GET hello returns hello with stub and stubbery`` () =
+    member this.``test CE works stubbed client had valid http response and inner request with content`` () =
+
         task {
 
-            use stub = new Stubbery.ApiStub()
-            stub.Get("/externalApi", fun r args -> """{ "ok" : "hello" }""" |> box) |> ignore
-            stub.Post("/anotherApi", fun r args -> """{ "ok" : "hello" }""" |> box) |> ignore
-
-            let uri : MutableUri = { MockUri = new Uri("http://test") }
-
-            let application =
-                (new WebApplicationFactory<Startup>())
-                    .WithWebHostBuilder(fun b ->
-                        b.ConfigureTestServices(fun s ->
-                            s.ConfigureAll<HttpClientFactoryOptions>(fun options ->
-                                options.HttpClientActions.Add(fun c -> 
-                                    c.BaseAddress <- uri.MockUri)
-                            ) |> ignore
-                        ) |> ignore
-                    )
-
-            let client = application.CreateClient()
-            stub.Start()
-            uri.MockUri <- new Uri(stub.Address)
-
-            let! hello = client.GetAsync("/Hello")
-
-            Assert.NotNull(hello)
-
-            }
+            let testApp =
+                testce { 
+                    POSTJ "/stub-this-post" {| Ok = "yeah" |}
+                }
             
-    [<Fact>]
-    let ``test stubbery with extension works`` () =
+            use internalClient : HttpClient =  testApp.GetFactory().Services.GetRequiredService<HttpClient>()
 
-        task {
+            // call an endpoint not invoked/used with a body, to check request content
+            let! response = internalClient.PostAsJsonAsync("/stub-this-post", {| Test = "hey" |})
 
-            let testApp =
-                testce_stubbery () { 
-                    GET "/externalApi" (fun r args -> {| Ok = "yeah" |} |> box)
-                    POST "/anotherApi" (fun r args -> {| Ok = "yeah" |} |> box)
-                }
+            // can be used by client "middleware" in http client factory (delegating handlers / http message handlers)
+            Assert.NotNull(response.RequestMessage);
 
-            use client = testApp.GetFactory().CreateClient()
+            let! testMessage = response.RequestMessage.Content.ReadFromJsonAsync<{| Test: string |}>()
 
-            let! r = client.GetAsync("/Hello")
+            Assert.Equal("hey", testMessage.Test)
 
-            let! rr =
-                r.EnsureSuccessStatusCode()
-                    .Content.ReadAsStringAsync()
+            // read response and check it matched the stub body
 
-            Assert.NotEmpty(rr)
+            let! responseObj = response.Content.ReadFromJsonAsync<{| Ok: string |}>()
+
+            Assert.Equal("yeah", responseObj.Ok)
         } 
 
-    [<Fact>]
-    let ``test stubbery with swagger gen client for json apis`` () =
-
-        task {
-            let expected =  {| Ok = "yeah" |}
-
-            let testApp =
-                testce_stubbery () { 
-                    GET "/externalApi" (fun r args -> expected |> box)
-                    POST "/anotherApi" (fun r args -> expected |> box)
-                }
-
-            use client = testApp.GetFactory().CreateClient()
-            let typedClient = new MyOpenapi.Client(client)
-
-            let! r = typedClient.GetHello()
-
-            Assert.Equal(expected.Ok, r.Ok)
-        } 
 
     [<Fact>]
-    let ``test with extension works no stubbery`` () =
+    member this.``test CE works stubbing multiple endpoints`` () =
 
         task {
 
             let expected = {| Ok = "yeah" |}
 
             let testApp =
-                testce () { 
+                testce { 
                     GETJ "/externalApi" expected
                     POSTJ "/another/anotherApi" {| Test = "hello" ; Time = 1|}
                     POST "/notUsed" (fun _ _ -> "ok" |> R_TEXT)
@@ -147,7 +105,7 @@ module Tests =
             let! internalResponse = internalClient.GetAsync("externalApi")
 
             // can be used by client middleware
-            Assert.NotNull(internalResponse.RequestMessage);
+            Assert.NotNull(internalResponse.RequestMessage)
 
             use client = factory.CreateClient()
 
@@ -161,14 +119,14 @@ module Tests =
         } 
 
     [<Fact>]
-    let ``test with extension works two clients`` () =
+    member this.``test with extension works two clients`` () =
 
         task {
 
             let expected = {| Ok = "yeah" |}
 
             let testApp =
-                testce () { 
+                testce { 
                     GETJ "/externalApi" expected
                     POST "/another/anotherApi" (fun _ _ -> {| Test = "hello" ; Time = 1|} |> R_JSON)
                     POST "/notUsed" (fun _ _ -> "ok" |> R_TEXT)
@@ -195,13 +153,13 @@ module Tests =
         } 
 
     [<Fact>]
-    let ``test with swagger gen client for json apis`` () =
+    member this.``test with swagger gen client for json apis`` () =
 
         task {
             let expected =  {| Ok = "yeah" |}
 
             use testApp =
-                testce () { 
+                testce { 
                     GETJ "/notUsed" expected
                     GETJ "/externalApi" expected
                     POSTJ "/another/anotherApi" expected  
@@ -216,13 +174,13 @@ module Tests =
         } 
 
     [<Fact>]
-    let ``check custom client override still allowed before`` () =
+    member this.``check custom client override still allowed before`` () =
 
         task {
             let expected =  {| Ok = "yeah" |}
 
             use testApp =
-                testce () { 
+                testce { 
                     GETJ "externalApi" expected
                     POSTJ "another/anotherApi" expected  
                 }
@@ -243,14 +201,14 @@ module Tests =
         }
 
     [<Fact>]
-    let ``check custom client override still allowed after`` () =
+    member this.``check custom client override still allowed after`` () =
 
         task {
 
             let expected =  {| Ok = "yeah" |}
 
             use testApp =
-                testce () { 
+                testce { 
                     GETJ "externalApi" expected
                     POSTJ "test/anotherApi" expected  
                 }

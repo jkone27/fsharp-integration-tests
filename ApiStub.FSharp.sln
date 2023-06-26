@@ -5,7 +5,7 @@ VisualStudioVersion = 17.1.32328.378
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "app", "src\app.fsproj", "{BF90DE53-4318-4F58-9889-D4173C24EB18}"
 EndProject
-Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "test", "test\test.fsproj", "{8756BCBB-995D-436E-8D2F-CADAA325948B}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "test", "test\ApiStub.FSharp.Tests.fsproj", "{8756BCBB-995D-436E-8D2F-CADAA325948B}"
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "ApiStub.FSharp", "ApiStub.FSharp\ApiStub.FSharp.fsproj", "{F7EE43A1-C472-4B78-97AD-51B5435CC1BE}"
 EndProject
