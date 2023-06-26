@@ -8,54 +8,21 @@ open System
 open Microsoft.Extensions.Http
 open Microsoft.AspNetCore.Routing.Template
 open Microsoft.AspNetCore.Routing
-open System.Net
 
 module CE =
     open BuilderExtensions
     open HttpResponseHelpers
     open DelegatingHandlers
-
-    /// NOT IN USE, check if needed
-    type ResponseStreamWrapperHandler(handler:  HttpMessageHandler) =
-        inherit DelegatingHandler(handler)
-
-        override this.SendAsync(request, cancellationToken) =
-            
-            let wrappedBase = new AsyncCallableHandler(base.InnerHandler) 
-            
-            task {
-                let! response = wrappedBase.CallSendAsync(request, cancellationToken);
-
-                let! bytes = response.Content.ReadAsByteArrayAsync(cancellationToken)
-
-                let newContent = new ByteArrayContent(bytes)
-
-                for sourceHeader in response.Content.Headers do
-                    let vals = sourceHeader.Value |> Seq.toArray
-                    newContent.Headers.Add(sourceHeader.Key, vals)
-
-                response.Content <- newContent
-
-                return response
-            }
-
-    type MockTerminalHandler() = 
-        inherit HttpMessageHandler()
-
-        override this.SendAsync(_, token) =
-            task {
-                token.ThrowIfCancellationRequested()
-            
-                return 
-                    new StringContent("No Stubs Specified for This Call")
-                    |> R_ERROR HttpStatusCode.BadRequest
-            }         
-    
+   
     type TestClient<'T when 'T: not struct>() =
 
         let factory = new WebApplicationFactory<'T>()
         let mutable httpMessageHandler : DelegatingHandler = null
-        let customConfigureServices = new ResizeArray<IServiceCollection -> obj>()
+        let customConfigureServices = 
+            new ResizeArray<IServiceCollection -> IServiceCollection>()
+        let customConfigureTestServices = 
+            new ResizeArray<IServiceCollection -> IServiceCollection>()
+        
 
         interface IDisposable 
                 with member this.Dispose() =
@@ -161,9 +128,15 @@ module CE =
         member this.DeleteJson(x, route, stub) =
             this.StubJson(x, [|HttpMethod.Delete|], route, stub)
 
-        [<CustomOperation("config_services")>]
+        [<CustomOperation("WITH_SERVICES")>]
         member this.CustomConfigServices(x, customAction) =
             customConfigureServices.Add(customAction)
+            this
+
+        [<CustomOperation("WITH_TEST_SERVICES")>]
+        member this.CustomConfigTestServices(x, customAction) =
+            customConfigureTestServices.Add(customAction)
+            this
 
         member this.GetFactory() =
             factory
@@ -190,6 +163,11 @@ module CE =
                     custom_config(s) 
                     |> ignore
 
+            )
+            |> web_configure_test_services (fun s -> 
+                for custom_config in customConfigureTestServices do
+                    custom_config(s) 
+                    |> ignore
             )
 
                     
