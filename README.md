@@ -85,6 +85,14 @@ Available HTTP content constructors are:
 * `R_JSON` : returns json
 * `R_ERROR` : returns an HTTP error
 
+## Configure Services HELPERS
+
+* `WITH_SERVICES` : to override your ConfigureServices for tests
+* `WITH_TEST_SERVICES`: to override your specific test services (a bit redundant in some cases, depending on the need)
+
+## More Examples?
+
+See examples in test folder for more details on the usage.
 
 ## ApiStub.FSharp.Stubbery
 
