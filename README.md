@@ -1,10 +1,13 @@
 # ApiStub.FSharp
 
-You have an ASP NET NET5/6 dotnet api, and you want to simplify http stubs for integration
-testing, so you can make use of this Computation Expressions (CE) to simplify
-your tests with some integration testing http stubs DSL. 
+You have an ASP NET NET6+ (NET6 is LTS in 2023) dotnet API, and you want to simplify HTTP stubs for integration
+testing, so you can make use of these Computation Expressions (CE) to simplify
+your tests with some integration testing HTTP stubs DSL. 
 
-Important, to use the CE, you have to build your CE object first by passing the generic Startup type argument. Because of how it's implemented still needs you to provide a Startup class, future version might make use of Program only from minimal api (this already uses WebApplication only anyway).
+Important, to use the CE, you have to build your CE object first by passing the generic Startup type argument. 
+Because of how it's implemented still needs you to provide a Startup class, 
+future version might make use of Program only from minimal api (this already uses WebApplication only anyway).
+
 
 ## USAGE
 
@@ -111,7 +114,7 @@ module Tests =
 
     // build your aspnetcore integration testing CE using Stubbery library
     // for serving HTTP stubs
-    let test_stubbery () = new TestStubberyClient<Startup>()
+    let test_stubbery = new TestStubberyClient<Startup>()
 
     [<Fact>]
     let ``Integration test with stubbery`` () =
@@ -119,7 +122,7 @@ module Tests =
         task {
 
             let testApp =
-                test_stubbery () { 
+                test_stubbery { 
                     GET "/externalApi" (fun r args -> expected |> box)
                 }
 
@@ -130,6 +133,7 @@ module Tests =
             r.EnsureSuccessStatusCode()
         } 
 ```
+
 
 ## How to Contribute
 
@@ -142,3 +146,4 @@ module Tests =
 * more info on [F# xunit testing](https://learn.microsoft.com/en-us/dotnet/core/testing/unit-testing-fsharp-with-dotnet-test).
 * more general info on aspnetcore integration testing if you use [Nunit](https://learn.microsoft.com/en-us/dotnet/core/testing/unit-testing-fsharp-with-nunit) instead.
 * [aspnetcore integration testing](https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests?view=aspnetcore-7.0) docs in C#
+
