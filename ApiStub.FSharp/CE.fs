@@ -13,6 +13,9 @@ module CE =
     open BuilderExtensions
     open HttpResponseHelpers
     open DelegatingHandlers
+
+    let private toAsync stub =
+        fun req args -> task { return stub req args }
    
     type TestClient<'T when 'T: not struct>() =
 
@@ -34,9 +37,10 @@ module CE =
 
         member this.Yield(()) = (factory, httpMessageHandler, customConfigureServices)
 
+
         /// generic stub operation with stub function
         [<CustomOperation("stub_with_options")>]
-        member this.StubWithOptions(_, methods, routeTemplate : string, stub: HttpRequestMessage -> RouteValueDictionary -> HttpResponseMessage, useRealHttpClient) =
+        member this.StubWithOptions(_, methods, routeTemplate : string, stubAsync: HttpRequestMessage -> RouteValueDictionary -> HttpResponseMessage Task, useRealHttpClient) =
             
             let routeValueDict = new RouteValueDictionary()
             let templateMatcher = 
@@ -58,14 +62,19 @@ module CE =
                         new HttpClientHandler()
                     else
                         new ResponseStreamWrapperHandler(new MockTerminalHandler())
-                httpMessageHandler <- new MockClientHandler(baseClient, methods, templateMatcher.Value, stub)
+                httpMessageHandler <- new MockClientHandler(baseClient, methods, templateMatcher.Value, stubAsync)
             else
-                httpMessageHandler <- new MockClientHandler(httpMessageHandler, methods, templateMatcher.Value, stub)
+                httpMessageHandler <- new MockClientHandler(httpMessageHandler, methods, templateMatcher.Value, stubAsync)
 
             this
 
+
         [<CustomOperation("stub")>]
         member this.Stub(x, methods, routeTemplate, stub: HttpRequestMessage -> RouteValueDictionary -> HttpResponseMessage)=
+            this.StubWithOptions(x, methods, routeTemplate, stub |> toAsync, false)
+
+        [<CustomOperation("stub_async")>]
+        member this.StubAsync(x, methods, routeTemplate, stub: HttpRequestMessage -> RouteValueDictionary -> HttpResponseMessage Task)=
             this.StubWithOptions(x, methods, routeTemplate, stub, false)
 
         /// stub operation with stub object (HttpResponseMessage)
@@ -84,6 +93,11 @@ module CE =
             this.StubObj(x, methods, routeTemplate, fun _ -> stub |> R_JSON)
 
         /// stub GET request with stub function
+        [<CustomOperation("GET_ASYNC")>]
+        member this.GetAsync(x, route, stub) =
+            this.StubAsync(x, [|HttpMethod.Get|], route, stub)
+
+        /// stub GET request with stub function
         [<CustomOperation("GET")>]
         member this.Get(x, route, stub) =
             this.Stub(x, [|HttpMethod.Get|], route, stub)
@@ -95,27 +109,37 @@ module CE =
 
         /// stub GET json
         [<CustomOperation("GETJ")>]
-        member this.GetJson(x, route, stub) =
+        member this.GetJson(x, route, stub: obj) =
             this.StubJson(x, [|HttpMethod.Get|], route, stub)
 
         /// stub POST
+        [<CustomOperation("POST_ASYNC")>]
+        member this.PostAsync(x, route, stub) =
+            this.StubAsync(x, [|HttpMethod.Post|], route, stub)
+
+         /// stub POST
         [<CustomOperation("POST")>]
         member this.Post(x, route, stub) =
             this.Stub(x, [|HttpMethod.Post|], route, stub)
 
         /// stub POST json
         [<CustomOperation("POSTJ")>]
-        member this.PostJson(x, route, stub) =
+        member this.PostJson(x, route, stub: obj) =
             this.StubJson(x, [|HttpMethod.Post|], route, stub)
 
         /// stub PUT
+        [<CustomOperation("PUT_ASYNC")>]
+        member this.PutAsync(x, route, stub) =
+            this.StubAsync(x, [|HttpMethod.Put|], route, stub)
+
+         /// stub PUT
         [<CustomOperation("PUT")>]
         member this.Put(x, route, stub) =
             this.Stub(x, [|HttpMethod.Put|], route, stub)
 
         /// stub PUT json
         [<CustomOperation("PUTJ")>]
-        member this.PutJson(x, route, stub) =
+        member this.PutJson(x, route, stub: obj) =
             this.StubJson(x, [|HttpMethod.Put|], route, stub)
 
         /// stub DELETE
@@ -123,9 +147,14 @@ module CE =
         member this.Delete(x, route, stub) =
             this.Stub(x, [|HttpMethod.Delete|], route, stub)
 
+         /// stub DELETE
+        [<CustomOperation("DELETE_ASYNC")>]
+        member this.DeleteAsync(x, route, stub) =
+            this.StubAsync(x, [|HttpMethod.Delete|], route, stub)
+
         /// stub DELETE json
         [<CustomOperation("DELETEJ")>]
-        member this.DeleteJson(x, route, stub) =
+        member this.DeleteJson(x, route, stub: obj) =
             this.StubJson(x, [|HttpMethod.Delete|], route, stub)
 
         [<CustomOperation("WITH_SERVICES")>]

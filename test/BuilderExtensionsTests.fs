@@ -91,3 +91,24 @@ type BuilderExtensionsTests() =
 
             Assert.Equal(1001, resp.ResponseCode)
         }
+
+    [<Fact>]
+    member this.``HTTP MOCKS can use task async functions OK``() = 
+        task {
+        
+            let testApp = testce {
+                    GET_ASYNC "hello" (fun r args -> 
+                        task {
+                            return {| ResponseCode = 1001 |} |> R_JSON
+                        }   
+                    )        
+                }
+
+            use fac = testApp.GetFactory()
+
+            let client = fac.Services.GetRequiredService<HttpClient>()
+
+            let! resp = client.GetFromJsonAsync<{| ResponseCode: int |}>("hello")
+
+            Assert.Equal(1001, resp.ResponseCode)
+        }

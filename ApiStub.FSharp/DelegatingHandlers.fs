@@ -31,7 +31,7 @@ module DelegatingHandlers =
                     return! wrappedBase.CallSendAsync(request, token)
                 else
                     // HTTP response stubbing happens here, the request has matched, go on with the stub
-                    let mutable expected : HttpResponseMessage = responseStubber request routeDict
+                    let! (expected : HttpResponseMessage) = responseStubber request routeDict
                     // reattach original request!!!
                     expected.RequestMessage <- request
                     return expected
