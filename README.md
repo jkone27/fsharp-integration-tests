@@ -1,18 +1,19 @@
 # ApiStub.FSharp
+# ApiStub.FSharp [![NuGet Badge](https://buildstats.info/nuget/ApiStub.FSharp)](https://www.nuget.org/packages/ApiStub.FSharp)
 
 You have an ASP NET NET6+ (NET6 is LTS in 2023) dotnet API, and you want to simplify HTTP stubs for integration
 testing, so you can make use of these Computation Expressions (CE) to simplify
 your tests with some integration testing HTTP stubs DSL. 
 
-Important, to use the CE, you have to build your CE object first by passing the generic Startup type argument. 
-Because of how it's implemented still needs you to provide a Startup class, 
-future version might make use of Program only from minimal api (this already uses WebApplication only anyway).
+To use the CE, you must build your CE object first by passing the generic Startup type argument. 
+For how the library is implemented, it still needs you to provide a Startup class, 
+future versions might make use of Program only from minimal API (this already uses WebApplication only anyway).
 
 
 ## USAGE
 
-Suppose your server registers 2 api clients internally to make calls to other services, say to the outbound routes `externalApi` and `anotherApi`,
-one client using `GET` and another using `POST` methods inside your api client code. 
+Suppose your server registers 2 API clients internally to make calls to other services, say to the outbound routes `externalApi` and `anotherApi`,
+one client using `GET` and another using `POST` methods inside your API client code. 
 
 It's easy to **mock** those endpoints (with data stubs) during integration tests in this way (or similar)...
 
@@ -61,7 +62,7 @@ Available HTTP mocking methods in the test dsl are:
     )
 ```
 
-* `GETJ`, `PUTJ`, `POSTJ`, `DELETEJ` - for objects converted to json content
+* `GETJ`, `PUTJ`, `POSTJ`, `DELETEJ` - for objects converted to JSON content
 
 ```fsharp
 GETJ "/yetAnotherOne" {| Success = true |}
@@ -84,24 +85,24 @@ GETJ "/yetAnotherOne" {| Success = true |}
 
 Available HTTP content constructors are: 
 
-* `R_TEXT` : returns plain text
-* `R_JSON` : returns json
-* `R_ERROR` : returns an HTTP error
+* `R_TEXT`: returns plain text
+* `R_JSON`: returns JSON
+* `R_ERROR`: returns an HTTP error
 
 ## Configure Services HELPERS
 
-* `WITH_SERVICES` : to override your ConfigureServices for tests
+* `WITH_SERVICES`: to override your ConfigureServices for tests
 * `WITH_TEST_SERVICES`: to override your specific test services (a bit redundant in some cases, depending on the need)
 
 ## More Examples?
 
-See examples in test folder for more details on the usage.
+Please take a look at the examples in the `test` folder for more details on the usage.
 
 ## ApiStub.FSharp.Stubbery
 
 A version using the [Stubbery](https://github.com/markvincze/Stubbery) library is also present for "compatibility" when migrating from `stubbery` versions of pre existing integration tests, in your integration tests setup.
 
-In general it's advised to not have dependencies or running any in-memory http server if possible, so the minimal version is preferred.
+In general, it's advised to not have dependencies or run any in-memory HTTP server if possible, so the minimal version is preferred.
 
 
 ```fsharp
@@ -137,8 +138,8 @@ module Tests =
 
 ## How to Contribute
 
-* Search for an open issue or report one, check if a similar issue was reported first
-* feel free to get in touch, to fork and checkout the repo
+* Search for an open issue or report one, and check if a similar issue was reported first
+* feel free to get in touch, to fork and check out the repo
 * test and find use cases for this library, testing in F# is awesome!!!!
 
 ### References
