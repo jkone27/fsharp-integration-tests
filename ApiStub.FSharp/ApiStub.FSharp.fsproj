@@ -27,6 +27,7 @@
     <Compile Include="HttpResponseHelpers.fs" />
     <Compile Include="DelegatingHandlers.fs" />
     <Compile Include="CE.fs" />
+    <Compile Include="BDD.fs" />
   </ItemGroup>
 
   <ItemGroup>
