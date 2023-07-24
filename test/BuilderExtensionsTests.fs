@@ -23,6 +23,7 @@ open ApiStub.FSharp.CE
 open ApiStub.FSharp.BuilderExtensions
 open ApiStub.FSharp.HttpResponseHelpers
 open ApiStub.FSharp
+open ApiStub.FSharp.BDD
 
 type ISomeSingleton =
     interface
@@ -112,3 +113,35 @@ type BuilderExtensionsTests() =
 
             Assert.Equal(1001, resp.ResponseCode)
         }
+
+    [<Fact>]
+    member this.``when i call /hello i get 'world' back with 200 ok`` () =
+        
+        let stubData = [1,2,3]
+            
+        testce {
+             GET "/hello" ( fun _ _ -> $"hello world {stubData}" |> R_TEXT )    
+        }
+        |> SCENARIO "when i call /hello i get 'world' back with 200 ok"
+        |> SETUP (fun s -> task {
+           
+            let test = s.TestClient
+            
+            let f = test.GetFactory() 
+            
+            return {
+                Client = f.CreateClient()
+                Factory = f
+                Scenario = s
+                FeatureStubData = stubData
+            }
+        }) (fun c -> c)
+        |> GIVEN (fun g -> "hello" |> Task.FromResult)
+        |> WHEN (fun g -> task {
+            let! (r : HttpResponseMessage) = g.Environment.Client.GetAsync("/Hello")
+            return! r.Content.ReadAsStringAsync()
+        })
+        |> THEN (fun w -> 
+            assert ("hello world 1,2,3" = w.AssertData) 
+        )
+        |> END
