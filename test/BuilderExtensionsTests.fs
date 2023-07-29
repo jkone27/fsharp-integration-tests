@@ -117,10 +117,10 @@ type BuilderExtensionsTests() =
     [<Fact>]
     member this.``when i call /hello i get 'world' back with 200 ok`` () =
         
-        let stubData = [1,2,3]
+        let mutable stubData = { Ok = "hello" }
             
         testce {
-             GET "/hello" ( fun _ _ -> $"hello world {stubData}" |> R_TEXT )    
+            GETJ "/externalApi" stubData
         }
         |> SCENARIO "when i call /hello i get 'world' back with 200 ok"
         |> SETUP (fun s -> task {
@@ -136,12 +136,14 @@ type BuilderExtensionsTests() =
                 FeatureStubData = stubData
             }
         }) (fun c -> c)
-        |> GIVEN (fun g -> "hello" |> Task.FromResult)
+        |> GIVEN (fun g -> 
+            stubData |> Task.FromResult // could also be smt else, just an exampple...
+        )
         |> WHEN (fun g -> task {
             let! (r : HttpResponseMessage) = g.Environment.Client.GetAsync("/Hello")
-            return! r.Content.ReadAsStringAsync()
+            return! r.Content.ReadFromJsonAsync<{| Ok: string |}>()
         })
         |> THEN (fun w -> 
-            assert ("hello world 1,2,3" = w.AssertData) 
+            assert (w.Given.ArrangeData.Ok = w.AssertData.Ok) 
         )
         |> END
