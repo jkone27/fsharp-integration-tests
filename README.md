@@ -98,7 +98,15 @@ Available HTTP content constructors are:
 You can use some BDD extension to perform Gerkin like setups and assertions
 
 ```fsharp
-[<Fact>]
+// open ...
+open ApiStub.FSharp.BDD
+open HttpResponseMessageExtensions
+
+module BDDTests =
+
+    let testce = new TestClient<Startup>()
+
+    [<Fact>]
     let ``when i call /hello i get 'world' back with 200 ok`` () =
             
             let mutable expected = "_"
