@@ -95,7 +95,7 @@ Available HTTP content constructors are:
 
 ## BDD Extensions
 
-You can use some BDD extension to perform Gerkin like setups and assertions
+You can use some BDD extension to perform [Gherkin-like setups and assertions](https://cucumber.io/docs/gherkin/reference/)
 
 ```fsharp
 // open ...
