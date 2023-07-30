@@ -6,8 +6,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="CETests.fs" />
+    <Compile Include="BDDTests.fs" />
+    <Compile Include="BuilderExtensionsTests.fs" />
     <Compile Include="StubberyTests.fs" />
-     <Compile Include="BuilderExtensionsTests.fs" />
     <Content Include="swagger.json" />
   </ItemGroup>
   <ItemGroup>
