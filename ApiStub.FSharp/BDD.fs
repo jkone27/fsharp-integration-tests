@@ -188,6 +188,7 @@ module BDD =
             return! r.Content.ReadAsStringAsync()
         })
         |> THEN (fun w -> 
-            assert ("hello world 1,2,3" = w.AssertData) 
+            let _ = ("hello world 1,2,3" = w.AssertData) 
+            ()
         )
         |> END

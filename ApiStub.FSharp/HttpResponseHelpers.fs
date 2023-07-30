@@ -5,6 +5,7 @@ open System.Net.Http
 open System
 open System.Net
 open System.Net.Http.Json
+open System.Text.Json
 
 module HttpResponseHelpers =
 
@@ -18,7 +19,7 @@ module HttpResponseHelpers =
 
     let inline R_JSON (x : obj) =
         x
-        |> System.Text.Json.JsonSerializer.Serialize
+        |> JsonSerializer.Serialize
         |> R_OK "application/json"
 
     let inline R_JSON_CONTENT (x : obj) =
@@ -31,3 +32,33 @@ module HttpResponseHelpers =
         let response = new HttpResponseMessage(statusCode)
         response.Content <- content
         response
+
+
+module HttpResponseMessageExtensions =
+    
+    open HttpResponseHelpers
+
+    type System.Net.Http.HttpResponseMessage with
+
+        member this.EnsureSuccessOrFailWithContent() =
+            task {
+                let! contentString = this.Content.ReadAsStringAsync()
+                if this.IsSuccessStatusCode |> not then
+                    if contentString |> String.IsNullOrWhiteSpace then 
+                        failwith $"{this.RequestMessage.Method} {this.RequestMessage.RequestUri.AbsolutePath}: unknown server error {this.StatusCode}"
+                    else
+                        failwith contentString
+                return ()
+            }
+    
+        member this.EnsureSuccessAndParse<'a>() =
+            task {
+                let! contentString = this.Content.ReadAsStringAsync()
+                if this.IsSuccessStatusCode |> not then
+                    if contentString |> String.IsNullOrWhiteSpace then 
+                        failwith $"{this.RequestMessage.Method} {this.RequestMessage.RequestUri.AbsolutePath}: unknown server error {this.StatusCode}"
+                    else
+                        failwith contentString
+
+                return contentString |> JsonSerializer.Deserialize<'a>
+            }

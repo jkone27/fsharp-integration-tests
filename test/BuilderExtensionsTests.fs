@@ -24,6 +24,8 @@ open ApiStub.FSharp.BuilderExtensions
 open ApiStub.FSharp.HttpResponseHelpers
 open ApiStub.FSharp
 open ApiStub.FSharp.BDD
+open HttpResponseMessageExtensions
+open Xunit.Abstractions
 
 type ISomeSingleton =
     interface
@@ -34,7 +36,7 @@ type SomeSingleton(name: string) =
         interface ISomeSingleton
     end
 
-type BuilderExtensionsTests() =
+type BuilderExtensionsTests(testOutput: ITestOutputHelper) =
 
     let testce = new CE.TestClient<Startup>()
 
@@ -117,10 +119,12 @@ type BuilderExtensionsTests() =
     [<Fact>]
     member this.``when i call /hello i get 'world' back with 200 ok`` () =
         
-        let mutable stubData = { Ok = "hello" }
+        let mutable expected = "_"
+        let stubData = { Ok = "undefined" }
             
         testce {
-            GETJ "/externalApi" stubData
+            POSTJ "/another/anotherApi" {| Test = "NOT_USED_VAL" |}
+            GET_ASYNC "/externalApi" (fun r _ -> task { return { stubData with Ok = expected } |> R_JSON })
         }
         |> SCENARIO "when i call /hello i get 'world' back with 200 ok"
         |> SETUP (fun s -> task {
@@ -137,13 +141,16 @@ type BuilderExtensionsTests() =
             }
         }) (fun c -> c)
         |> GIVEN (fun g -> 
-            stubData |> Task.FromResult // could also be smt else, just an exampple...
+            expected <- "hello"
+            testOutput.WriteLine(expected)
+            expected |> Task.FromResult
         )
         |> WHEN (fun g -> task {
             let! (r : HttpResponseMessage) = g.Environment.Client.GetAsync("/Hello")
-            return! r.Content.ReadFromJsonAsync<{| Ok: string |}>()
+            return! r.Content.ReadFromJsonAsync<Hello>()
+
         })
         |> THEN (fun w -> 
-            assert (w.Given.ArrangeData.Ok = w.AssertData.Ok) 
+            Assert.Equal(w.Given.ArrangeData, w.AssertData.Ok) 
         )
         |> END
