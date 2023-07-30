@@ -93,6 +93,60 @@ Available HTTP content constructors are:
 * `WITH_SERVICES`: to override your ConfigureServices for tests
 * `WITH_TEST_SERVICES`: to override your specific test services (a bit redundant in some cases, depending on the need)
 
+## BDD Extensions
+
+You can use some BDD extension to perform Gerkin like setups and assertions
+
+```fsharp
+[<Fact>]
+    let ``when i call /hello i get 'world' back with 200 ok`` () =
+            
+            let mutable expected = "_"
+            let stubData = { Ok = "undefined" }
+
+            // ARRANGE step is divided in CE (arrange client stubs)
+            // SETUP: additional factory or service or client configuration
+            // and GIVEN the actual arrange for the test 3As.
+                
+            // setup your test as usual here, test_ce is an instance of TestClient<TStartup>()
+            test_ce {
+                POSTJ "/another/anotherApi" {| Test = "NOT_USED_VAL" |}
+                GET_ASYNC "/externalApi" (fun r _ -> task { 
+                    return { stubData with Ok = expected } |> R_JSON 
+                })
+            }
+            |> SCENARIO "when i call /Hello i get 'world' back with 200 ok"
+            |> SETUP (fun s -> task {
+            
+                let test = s.TestClient
+                
+                // any additiona services or factory configuration before this point
+                let f = test.GetFactory() 
+                
+                return {
+                    Client = f.CreateClient()
+                    Factory = f
+                    Scenario = s
+                    FeatureStubData = stubData
+                }
+            }) (fun c -> c) // configure test client here if needed
+            |> GIVEN (fun g -> //ArrangeData
+                expected <- "world"
+                expected |> Task.FromResult
+            )
+            |> WHEN (fun g -> task { //ACT and AssertData
+                let! (r : HttpResponseMessage) = g.Environment.Client.GetAsync("/Hello")
+                return! r.Content.ReadFromJsonAsync<Hello>()
+
+            })
+            |> THEN (fun w -> // ASSERT
+                Assert.Equal(w.Given.ArrangeData, w.AssertData.Ok) 
+            )
+            |> END
+
+```
+
+
 ## More Examples?
 
 Please take a look at the examples in the `test` folder for more details on the usage.
