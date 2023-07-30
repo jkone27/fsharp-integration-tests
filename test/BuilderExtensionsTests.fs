@@ -23,6 +23,9 @@ open ApiStub.FSharp.CE
 open ApiStub.FSharp.BuilderExtensions
 open ApiStub.FSharp.HttpResponseHelpers
 open ApiStub.FSharp
+open ApiStub.FSharp.BDD
+open HttpResponseMessageExtensions
+open Xunit.Abstractions
 
 type ISomeSingleton =
     interface
@@ -33,7 +36,7 @@ type SomeSingleton(name: string) =
         interface ISomeSingleton
     end
 
-type BuilderExtensionsTests() =
+type BuilderExtensionsTests(testOutput: ITestOutputHelper) =
 
     let testce = new CE.TestClient<Startup>()
 
