@@ -97,6 +97,15 @@ Available HTTP content constructors are:
 
 You can use some BDD extension to perform [Gherkin-like setups and assertions](https://cucumber.io/docs/gherkin/reference/)
 
+they are all async `task` computations so they can be simply chained together:
+
+* `SCENARIO`: takes a `TestClient<TStartup>` as input and needs a name for your test scenario
+* `SETUP`: takes a scenario as input and can be used to configure the "test environmenttest": factory and the API client, additionally takes a separate API client configuration
+* `GIVEN`: takes a "test environment" or another "given" and returns a "given" step
+* `WHEN`: takes a "given" or another "when" step, and returns a a "when" step
+* `THEN`: takes a "when" step and asserts on it, returns the same "when" step as result to continue asserts
+* `END`: disposes the "test environment" and concludes the task computation
+
 ```fsharp
 // open ...
 open ApiStub.FSharp.BDD
