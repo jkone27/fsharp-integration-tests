@@ -1,3 +1,7 @@
+[![Ceasefire Now](https://badge.techforpalestine.org/ceasefire-now)](https://techforpalestine.org/learn-more)
+[![Stand With Ukraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/badges/StandWithUkraine.svg)](https://stand-with-ukraine.pp.ua)
+
+
 # ApiStub.FSharp [![NuGet Badge](https://buildstats.info/nuget/ApiStub.FSharp)](https://www.nuget.org/packages/ApiStub.FSharp)
 
 You have an ASP NET NET6+ (NET6 is LTS in 2023) dotnet API, and you want to simplify HTTP stubs for integration
