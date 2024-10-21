@@ -13,6 +13,8 @@ To use the CE, you must build your CE object first by passing the generic Startu
 For how the library is implemented, it still needs you to provide a Startup class, 
 future versions might make use of Program only from minimal API (this already uses WebApplication only anyway).
 
+**How** does the library work? the best way to understand it is checking this line of [code](https://github.com/jkone27/fsharp-integration-tests/blob/249c3244cd7e20e2168b82a49b6e7e14f2ad1004/ApiStub.FSharp/CE.fs#L176) and the member CE method `GetFactory()` in scope.
+
 
 ## USAGE
 
