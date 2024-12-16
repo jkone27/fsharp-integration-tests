@@ -3,7 +3,7 @@
 <a href='https://juststopoil.org/' target="_blank"><img alt='JUST_STOP_OIL' src='https://img.shields.io/badge/Just_STOP OIL-100000?style=plastic&logo=JUST_STOP_OIL&logoColor=white&labelColor=FFA600&color=000000'/></a>
 
 
-# ApiStub.FSharp [![NuGet Badge](https://buildstats.info/nuget/ApiStub.FSharp)](https://www.nuget.org/packages/ApiStub.FSharp)
+# ApiStub.FSharp [![NuGet Badge](https://img.shields.io/nuget/v/ApiStub.FSharp)](https://www.nuget.org/packages/ApiStub.FSharp)
 
 You have an ASP NET NET6+ (NET6 is LTS in 2023) dotnet API, and you want to simplify HTTP stubs for integration
 testing, so you can make use of these Computation Expressions (CE) to simplify
