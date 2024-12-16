@@ -1,0 +1,7 @@
+{
+  "tasks": {
+    "test": "dotnet test",
+    "build": "dotnet build",
+    "launch": "echo \"cannot run is a library\" && exit 1"
+  }
+}
