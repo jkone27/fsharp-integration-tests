@@ -9,6 +9,7 @@
     <Compile Include="BDDTests.fs" />
     <Compile Include="BuilderExtensionsTests.fs" />
     <Compile Include="StubberyTests.fs" />
+    <Compile Include="Issues.fs" />
     <Content Include="swagger.json" />
   </ItemGroup>
   <ItemGroup>
