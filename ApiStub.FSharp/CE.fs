@@ -8,6 +8,7 @@ open System
 open Microsoft.Extensions.Http
 open Microsoft.AspNetCore.Routing.Template
 open Microsoft.AspNetCore.Routing
+open Microsoft.AspNetCore.Http
 
 module CE =
     open BuilderExtensions
