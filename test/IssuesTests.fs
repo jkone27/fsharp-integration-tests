@@ -27,14 +27,12 @@ open ApiStub.FSharp.BDD
 open HttpResponseMessageExtensions
 open Xunit.Abstractions
 
-
-module BDDTests =
+module IssuesTests =
 
     let testce = new TestClient<Startup>()
 
-
     [<Fact>]
-    let ``when i call /hello i get 'world' back with 200 ok`` () =
+    let ``when base URL without trailing slash is combined correctly`` () =
             
             let mutable expected = "_"
             let stubData = { Ok = "undefined" }
@@ -45,7 +43,7 @@ module BDDTests =
                     return { stubData with Ok = expected } |> R_JSON 
                 })
             }
-            |> SCENARIO "when i call /Hello i get 'world' back with 200 ok"
+            |> SCENARIO "when base URL without trailing slash is combined correctly"
             |> SETUP (fun s -> task {
             
                 let test = s.TestClient
@@ -58,7 +56,10 @@ module BDDTests =
                     Scenario = s
                     FeatureStubData = stubData
                 }
-            }) (fun c -> c)
+            }) (fun c -> 
+                c.BaseAddress <- new Uri("http://whatever/without-trailing-slash")
+                c
+            )
             |> GIVEN (fun g -> 
                 expected <- "world"
                 expected |> Task.FromResult
@@ -72,5 +73,3 @@ module BDDTests =
                 Assert.Equal(w.Given.ArrangeData, w.AssertData.Ok) 
             )
             |> END
-
-  
