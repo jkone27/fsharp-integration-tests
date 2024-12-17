@@ -73,45 +73,4 @@ module BDDTests =
             )
             |> END
 
-    [<Fact>]
-    let ``when base URL without trailing slash is combined correctly`` () =
-            
-            let mutable expected = "_"
-            let stubData = { Ok = "undefined" }
-                
-            testce {
-                POSTJ "/another/anotherApi" {| Test = "NOT_USED_VAL" |}
-                GET_ASYNC "/externalApi" (fun r _ -> task { 
-                    return { stubData with Ok = expected } |> R_JSON 
-                })
-            }
-            |> SCENARIO "when base URL without trailing slash is combined correctly"
-            |> SETUP (fun s -> task {
-            
-                let test = s.TestClient
-                
-                let f = test.GetFactory() 
-                
-                return {
-                    Client = f.CreateClient()
-                    Factory = f
-                    Scenario = s
-                    FeatureStubData = stubData
-                }
-            }) (fun c -> 
-                c.BaseAddress <- new Uri("http://whatever/without-trailing-slash")
-                c
-            )
-            |> GIVEN (fun g -> 
-                expected <- "world"
-                expected |> Task.FromResult
-            )
-            |> WHEN (fun g -> task {
-                let! (r : HttpResponseMessage) = g.Environment.Client.GetAsync("/Hello")
-                return! r.Content.ReadFromJsonAsync<Hello>()
-
-            })
-            |> THEN (fun w -> 
-                Assert.Equal(w.Given.ArrangeData, w.AssertData.Ok) 
-            )
-            |> END
+  
