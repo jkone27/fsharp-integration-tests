@@ -11,6 +11,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{D3FA0092-6
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Web.Sample.Test", "test\Web.Sample.Test\Web.Sample.Test.fsproj", "{16F1F95C-D971-4F35-B1BA-D0CD6A7F5569}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Web.Sample.Csharp.Test", "test\Web.Sample.Csharp.Test\Web.Sample.Csharp.Test.csproj", "{F9662931-A238-4FAD-81D9-50D81885EC55}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -28,9 +30,14 @@ Global
 		{16F1F95C-D971-4F35-B1BA-D0CD6A7F5569}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{16F1F95C-D971-4F35-B1BA-D0CD6A7F5569}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{16F1F95C-D971-4F35-B1BA-D0CD6A7F5569}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F9662931-A238-4FAD-81D9-50D81885EC55}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F9662931-A238-4FAD-81D9-50D81885EC55}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F9662931-A238-4FAD-81D9-50D81885EC55}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F9662931-A238-4FAD-81D9-50D81885EC55}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{09C4FAA7-792D-48F0-9AD0-77D99B5B337D} = {969848AF-660B-4C8F-A732-86958A0A3F9D}
 		{16F1F95C-D971-4F35-B1BA-D0CD6A7F5569} = {D3FA0092-6D80-4228-A143-E35105DAD823}
+		{F9662931-A238-4FAD-81D9-50D81885EC55} = {D3FA0092-6D80-4228-A143-E35105DAD823}
 	EndGlobalSection
 EndGlobal
