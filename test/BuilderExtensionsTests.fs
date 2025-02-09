@@ -44,12 +44,14 @@ type BuilderExtensionsTests(testOutput: ITestOutputHelper) =
         member this.Dispose() = (testce :> IDisposable).Dispose()
 
     [<Fact>]
-    member this.``WITH_SERVICES registers correctly``() = 
+    member this.``WITH_SERVICES registers correctly``() =
         task {
-        
-            let testApp = testce {
+
+            let testApp =
+                testce {
                     GETJ "hello" {| ResponseCode = 1001 |}
-                    WITH_SERVICES (fun (s: IServiceCollection) -> 
+
+                    WITH_SERVICES(fun (s: IServiceCollection) ->
                         s.AddSingleton<ISomeSingleton>(new SomeSingleton("John")))
                 }
 
@@ -68,17 +70,19 @@ type BuilderExtensionsTests(testOutput: ITestOutputHelper) =
 
 
     [<Fact>]
-    member this.``WITH_TEST_SERVICES registers correctly``() = 
+    member this.``WITH_TEST_SERVICES registers correctly``() =
         task {
 
             let singletonMock = { new ISomeSingleton }
-        
-            let testApp = testce {
+
+            let testApp =
+                testce {
                     GETJ "hello" {| ResponseCode = 1001 |}
-                    WITH_SERVICES (fun (s: IServiceCollection) -> 
+
+                    WITH_SERVICES(fun (s: IServiceCollection) ->
                         s.AddSingleton<ISomeSingleton>(new SomeSingleton("John")))
-                    WITH_TEST_SERVICES (fun s -> 
-                        s.AddSingleton(singletonMock))
+
+                    WITH_TEST_SERVICES(fun s -> s.AddSingleton(singletonMock))
                 }
 
             let fac = testApp.GetFactory()
@@ -96,16 +100,11 @@ type BuilderExtensionsTests(testOutput: ITestOutputHelper) =
         }
 
     [<Fact>]
-    member this.``HTTP MOCKS can use task async functions OK``() = 
+    member this.``HTTP MOCKS can use task async functions OK``() =
         task {
-        
-            let testApp = testce {
-                    GET_ASYNC "hello" (fun r args -> 
-                        task {
-                            return {| ResponseCode = 1001 |} |> R_JSON
-                        }   
-                    )        
-                }
+
+            let testApp =
+                testce { GET_ASYNC "hello" (fun r args -> task { return {| ResponseCode = 1001 |} |> R_JSON }) }
 
             use fac = testApp.GetFactory()
 

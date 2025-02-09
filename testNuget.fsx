@@ -14,29 +14,24 @@ open HttpResponseHelpers
 open System.Threading.Tasks
 
 type Startup() =
-    member this.ConfigureServices(services) =
-        ()
+    member this.ConfigureServices(services) = ()
 
-    member this.Configure(app) =
-        ()
+    member this.Configure(app) = ()
 
 
-module Test = 
+module Test =
 
     // build your aspnetcore integration testing CE
     let test () = new CE.TestClient<Startup>()
 
     let ``test`` () =
-            task {
+        task {
 
-                let testApp =
-                    test () { 
-                        GETJ "/externalApi" {| Ok = "yeah" |}
-                    }
+            let testApp = test () { GETJ "/externalApi" {| Ok = "yeah" |} }
 
-                use client = testApp.GetFactory().CreateClient()
+            use client = testApp.GetFactory().CreateClient()
 
-                let! r = client.GetAsync("/Hello")
+            let! r = client.GetAsync("/Hello")
 
-                r.EnsureSuccessStatusCode()
-            } 
+            r.EnsureSuccessStatusCode()
+        }

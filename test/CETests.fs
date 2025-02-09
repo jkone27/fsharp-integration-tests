@@ -26,7 +26,7 @@ open ApiStub.FSharp
 
 type MyOpenapi = OpenApiClientProvider<"swagger.json">
 
-type MutableUri = Stubbery.StubberyCE.MutableUri 
+type MutableUri = Stubbery.StubberyCE.MutableUri
 
 type CETests() =
 
@@ -36,7 +36,7 @@ type CETests() =
         member this.Dispose() = (testce :> IDisposable).Dispose()
 
     [<Fact>]
-    member this.``GET weather returns a not null Date`` () =
+    member this.``GET weather returns a not null Date``() =
 
         let application = new WebApplicationFactory<Startup>()
 
@@ -51,24 +51,22 @@ type CETests() =
             Assert.NotNull(forecast.[0].Date)
         }
 
-    
+
     [<Fact>]
-    member this.``test CE works stubbed client had valid http response and inner request with content`` () =
+    member this.``test CE works stubbed client had valid http response and inner request with content``() =
 
         task {
 
-            let testApp =
-                testce { 
-                    POSTJ "/stub-this-post" {| Ok = "yeah" |}
-                }
-            
-            use internalClient : HttpClient =  testApp.GetFactory().Services.GetRequiredService<HttpClient>()
+            let testApp = testce { POSTJ "/stub-this-post" {| Ok = "yeah" |} }
+
+            use internalClient: HttpClient =
+                testApp.GetFactory().Services.GetRequiredService<HttpClient>()
 
             // call an endpoint not invoked/used with a body, to check request content
             let! response = internalClient.PostAsJsonAsync("/stub-this-post", {| Test = "hey" |})
 
             // can be used by client "middleware" in http client factory (delegating handlers / http message handlers)
-            Assert.NotNull(response.RequestMessage);
+            Assert.NotNull(response.RequestMessage)
 
             let! testMessage = response.RequestMessage.Content.ReadFromJsonAsync<{| Test: string |}>()
 
@@ -79,28 +77,28 @@ type CETests() =
             let! responseObj = response.Content.ReadFromJsonAsync<{| Ok: string |}>()
 
             Assert.Equal("yeah", responseObj.Ok)
-        } 
+        }
 
 
     [<Fact>]
-    member this.``test CE works stubbing multiple endpoints`` () =
+    member this.``test CE works stubbing multiple endpoints``() =
 
         task {
 
             let expected = {| Ok = "yeah" |}
 
             let testApp =
-                testce { 
+                testce {
                     GETJ "/externalApi" expected
-                    POSTJ "/another/anotherApi" {| Test = "hello" ; Time = 1|}
+                    POSTJ "/another/anotherApi" {| Test = "hello"; Time = 1 |}
                     POST "/notUsed" (fun _ _ -> "ok" |> R_TEXT)
                     POST "/notUsed2" (fun _ _ -> "ok" |> R_TEXT)
                     POST "/errRoute" (fun _ _ -> R_ERROR HttpStatusCode.NotAcceptable (new StringContent("err")))
                 }
-            
+
             let factory = testApp.GetFactory()
 
-            use internalClient : HttpClient =  factory.Services.GetRequiredService<HttpClient>()
+            use internalClient: HttpClient = factory.Services.GetRequiredService<HttpClient>()
 
             let! internalResponse = internalClient.GetAsync("externalApi")
 
@@ -116,19 +114,19 @@ type CETests() =
             let! rr = r.Content.ReadFromJsonAsync<MyOpenapi.Hello>()
 
             Assert.Equal(expected.Ok, rr.Ok)
-        } 
+        }
 
     [<Fact>]
-    member this.``test with extension works two clients`` () =
+    member this.``test with extension works two clients``() =
 
         task {
 
             let expected = {| Ok = "yeah" |}
 
             let testApp =
-                testce { 
+                testce {
                     GETJ "/externalApi" expected
-                    POST "/another/anotherApi" (fun _ _ -> {| Test = "hello" ; Time = 1|} |> R_JSON)
+                    POST "/another/anotherApi" (fun _ _ -> {| Test = "hello"; Time = 1 |} |> R_JSON)
                     POST "/notUsed" (fun _ _ -> "ok" |> R_TEXT)
                     POST "/notUsed2" (fun _ _ -> "ok" |> R_TEXT)
                     POST "/errRoute" (fun _ _ -> R_ERROR HttpStatusCode.NotAcceptable (new StringContent("err")))
@@ -150,19 +148,19 @@ type CETests() =
 
             r2.EnsureSuccessStatusCode() |> ignore
 
-        } 
+        }
 
     [<Fact>]
-    member this.``test with swagger gen client for json apis`` () =
+    member this.``test with swagger gen client for json apis``() =
 
         task {
-            let expected =  {| Ok = "yeah" |}
+            let expected = {| Ok = "yeah" |}
 
             use testApp =
-                testce { 
+                testce {
                     GETJ "/notUsed" expected
                     GETJ "/externalApi" expected
-                    POSTJ "/another/anotherApi" expected  
+                    POSTJ "/another/anotherApi" expected
                 }
 
             let client = testApp.GetFactory().CreateClient()
@@ -171,22 +169,22 @@ type CETests() =
             let! r = typedClient.GetHello()
 
             Assert.Equal(expected.Ok, r.Ok)
-        } 
+        }
 
     [<Fact>]
-    member this.``check custom client override still allowed before`` () =
+    member this.``check custom client override still allowed before``() =
 
         task {
-            let expected =  {| Ok = "yeah" |}
+            let expected = {| Ok = "yeah" |}
 
             use testApp =
-                testce { 
+                testce {
                     GETJ "externalApi" expected
-                    POSTJ "another/anotherApi" expected  
+                    POSTJ "another/anotherApi" expected
                 }
 
             let factory = testApp.GetFactory()
-                
+
             let clientFactory = factory.Services.GetRequiredService<IHttpClientFactory>()
             let customClient = clientFactory.CreateClient("anotherApiClient")
 
@@ -201,26 +199,26 @@ type CETests() =
         }
 
     [<Fact>]
-    member this.``check custom client override still allowed after`` () =
+    member this.``check custom client override still allowed after``() =
 
         task {
 
-            let expected =  {| Ok = "yeah" |}
+            let expected = {| Ok = "yeah" |}
 
             use testApp =
-                testce { 
+                testce {
                     GETJ "externalApi" expected
-                    POSTJ "test/anotherApi" expected  
+                    POSTJ "test/anotherApi" expected
                 }
 
-            let factory = 
+            let factory =
                 testApp.GetFactory()
-                |> web_configure_test_services (fun t -> 
-                    t.AddHttpClient("anotherApiClient", configureClient =
-                        (fun c -> c.BaseAddress <- new Uri("http://localhost/test/"))
-                    )
-                )
-                
+                |> web_configure_test_services (fun t ->
+                    t.AddHttpClient(
+                        "anotherApiClient",
+                        configureClient = (fun c -> c.BaseAddress <- new Uri("http://localhost/test/"))
+                    ))
+
             let clientFactory = factory.Services.GetRequiredService<IHttpClientFactory>()
             let customClient = clientFactory.CreateClient("anotherApiClient")
 

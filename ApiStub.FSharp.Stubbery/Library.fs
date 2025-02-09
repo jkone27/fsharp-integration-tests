@@ -36,55 +36,51 @@ module StubberyCE =
             stubbery
                 .Request(methods)
                 .IfRoute(route)
-                .Response(fun r args -> stub r args |> box) |> ignore
+                .Response(fun r args -> stub r args |> box)
+            |> ignore
+
             this
 
         [<CustomOperation("stub_obj")>]
-        member this.StubObj(x, methods, route, stub : unit -> obj) =
-            this.Stub(x, methods, route, fun _ _ -> stub())
+        member this.StubObj(x, methods, route, stub: unit -> obj) =
+            this.Stub(x, methods, route, (fun _ _ -> stub ()))
 
         [<CustomOperation("GET")>]
         member this.Get(x, route, stub) =
-            this.Stub(x, [|HttpMethod.Get|], route, stub)
+            this.Stub(x, [| HttpMethod.Get |], route, stub)
 
         [<CustomOperation("GET_OBJ")>]
         member this.GetObj(x, route, stub) =
-            this.StubObj(x, [|HttpMethod.Get|], route, fun _ -> stub)
+            this.StubObj(x, [| HttpMethod.Get |], route, (fun _ -> stub))
 
         [<CustomOperation("POST")>]
         member this.Post(x, route, stub) =
-            this.Stub(x, [|HttpMethod.Post|], route, stub)
+            this.Stub(x, [| HttpMethod.Post |], route, stub)
 
         [<CustomOperation("POST_OBJ")>]
         member this.PostObj(x, route, stub) =
-            this.StubObj(x, [|HttpMethod.Post|], route, fun _ -> stub)
+            this.StubObj(x, [| HttpMethod.Post |], route, (fun _ -> stub))
 
         [<CustomOperation("PUT")>]
         member this.Put(x, route, stub) =
-            this.Stub(x, [|HttpMethod.Put|], route, stub)
+            this.Stub(x, [| HttpMethod.Put |], route, stub)
 
         [<CustomOperation("DELETE")>]
         member this.Delete(x, route, stub) =
-            this.Stub(x, [|HttpMethod.Delete|], route, stub)
+            this.Stub(x, [| HttpMethod.Delete |], route, stub)
 
         member this.GetFactory() =
             let clientBuilder =
                 factory
                 |> web_configure_services (fun s ->
                     s.ConfigureAll<HttpClientFactoryOptions>(fun options ->
-                        options.HttpClientActions.Add(fun c -> 
-                            c.BaseAddress <- uri.MockUri
-                        )
-                    )
-                )
+                        options.HttpClientActions.Add(fun c -> c.BaseAddress <- uri.MockUri)))
 
             stubbery.Start()
             uri.MockUri <- new Uri(stubbery.Address)
             clientBuilder
 
-        interface IDisposable 
-                with member this.Dispose() =
-                        factory.Dispose()
-                        stubbery.Dispose()
-
-
+        interface IDisposable with
+            member this.Dispose() =
+                factory.Dispose()
+                stubbery.Dispose()
