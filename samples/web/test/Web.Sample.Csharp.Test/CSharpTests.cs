@@ -32,6 +32,10 @@ public class CSharpTests
 
         var response = await client.PostAsJsonAsync<object>(Services.routeOne, new { });
 
+        var responseText = await response.Content.ReadAsStringAsync();
+
         Assert.True(response.IsSuccessStatusCode);
+        Assert.Contains("Peter", responseText);
+        Assert.Contains("100", responseText);
     }
 }
