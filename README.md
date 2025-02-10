@@ -84,7 +84,7 @@ if you prefer to use C# some extension methods are provided to use with C#.
 
 `GETJ, PUTJ, POSTJ, DELETEJ`
 
-If you want to access more overloads, you can access the inspect `TestClient<T>` members and create your custom extension methods easilly.
+If you want to access more overloads, you can access the inspect `TestClient<T>` members and create your custom extension methods easilly, or open an issue if you think more should be supported.
 
 
 ```csharp
