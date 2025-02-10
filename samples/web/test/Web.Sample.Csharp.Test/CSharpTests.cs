@@ -2,18 +2,18 @@
 
 using System;
 using Xunit;
-using ApiStub.FSharp;
 using System.Threading.Tasks;
 using Web.Sample;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
+using static ApiStub.FSharp.CE;
 using static ApiStub.Fsharp.CsharpExtensions;
 
 public class CSharpTests
 {
     private static WebApplicationFactory<Web.Sample.Program> getWebAppFactory() =>
         // create an instance of the test client builder
-        new CE.TestClient<Web.Sample.Program>()
+        new TestClient<Web.Sample.Program>()
             .GETJ(Clients.Routes.name, new { Name = "Peter" })
             .GETJ(Clients.Routes.age, new { Age = 100 })
             .GetFactory();

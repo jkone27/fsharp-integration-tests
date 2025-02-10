@@ -78,6 +78,42 @@ module Tests =
         } 
 ```
 
+## C# APIs
+
+if you prefer to use C# some extension methods are provided to use with C#, if not, you can access the Computation Expression members and create your extension methods easilly
+
+```csharp
+using ApiStub.FSharp;
+using static ApiStub.Fsharp.CsharpExtensions; // to use ext methods from F#
+
+public class CSharpTests
+{
+    private static WebApplicationFactory<Web.Sample.Program> getWebAppFactory() =>
+        // create an instance of the test client builder
+        new CE.TestClient<Web.Sample.Program>()
+            .GETJ(Clients.Routes.name, new { Name = "Peter" })
+            .GETJ(Clients.Routes.age, new { Age = 100 })
+            .GetFactory();
+
+    // one app factory instance is oke for all tests
+    private static readonly WebApplicationFactory<Program> webAppFactory = getWebAppFactory();
+
+    [Fact]
+    public async Task CsharpTest_Peter_is_100_years_old()
+    {
+        var client = webAppFactory.CreateClient();
+
+        var response = await client.PostAsJsonAsync<object>(Services.routeOne, new { });
+
+        var responseText = await response.Content.ReadAsStringAsync();
+
+        Assert.True(response.IsSuccessStatusCode);
+        Assert.Contains("Peter", responseText);
+        Assert.Contains("100", responseText);
+    }
+}
+```
+
 ## HTTP Methods 🚕
 
 Available HTTP methods in the test dsl to "mock" HTTP client responses are the following:
