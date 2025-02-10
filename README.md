@@ -78,6 +78,28 @@ module Tests =
         } 
 ```
 
+## C# APIs
+
+if you prefer to use C# some extension methods are provided to use with C#.  
+
+`GETJ, PUTJ, POSTJ, DELETEJ`
+
+If you want to access more overloads, you can access the inspect `TestClient<T>` members and create your custom extension methods easilly.
+
+
+```csharp
+using ApiStub.FSharp;
+using static ApiStub.Fsharp.CsharpExtensions; 
+
+var webAppFactory = new CE.TestClient<Web.Sample.Program>()
+    .GETJ(Clients.Routes.name, new { Name = "Peter" })
+    .GETJ(Clients.Routes.age, new { Age = 100 })
+    .GetFactory();
+
+// factory.CreateClient(); // as needed later in your tests
+
+```
+
 ## HTTP Methods 🚕
 
 Available HTTP methods in the test dsl to "mock" HTTP client responses are the following:
