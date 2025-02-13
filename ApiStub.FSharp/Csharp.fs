@@ -1,4 +1,4 @@
-namespace ApiStub.Fsharp
+namespace ApiStub.Fsharp.CSharp
 
 open System.Runtime.CompilerServices
 open ApiStub.FSharp.CE

@@ -10,25 +10,29 @@ open ApiStub.FSharp.HttpResponseHelpers
 module BDD =
 
 
+    /// Defines a BDD scenario
     type Scenario<'TStartup when 'TStartup: not struct> =
         { UseCase: string
           TestClient: TestClient<'TStartup> }
 
+    /// Defines the context propagated through the test
     type Environment<'TStartup, 'FeatureStubData when 'TStartup: not struct> =
         { Scenario: Scenario<'TStartup>
           FeatureStubData: 'FeatureStubData
           Factory: 'TStartup WebApplicationFactory
           Client: HttpClient }
 
+    /// Result of a Given gherkin clause
     type GivenResult<'ArrangeData, 'FeatureStubData, 'TStartup when 'TStartup: not struct> =
         { Environment: Environment<'TStartup, 'FeatureStubData>
           ArrangeData: 'ArrangeData } // once preconditions are set
 
+    /// Result of a When gherkin clause
     type WhenResult<'ArrangeData, 'FeatureStubData, 'AssertData, 'TStartup when 'TStartup: not struct> =
         { Given: GivenResult<'ArrangeData, 'FeatureStubData, 'TStartup>
           AssertData: 'AssertData }
 
-
+    /// Generic step type for the BDD steps
     type Step<'TStartup, 'FeatureStubData, 'ArrangeData, 'AssertData when 'TStartup: not struct> =
         | Scenario of Scenario<'TStartup>
         | Environment of Environment<'TStartup, 'FeatureStubData>
@@ -37,11 +41,13 @@ module BDD =
         | Invalid of error: string
 
 
+    /// Scenario builder
     let SCENARIO useCase testClient =
         { UseCase = useCase
           TestClient = testClient }
         |> Step.Scenario
 
+    /// Setup the Environment for the given scenario
     let SETUP arrangeTestEnvironment customizeClient step =
         task {
 
@@ -58,6 +64,7 @@ module BDD =
             | _ -> return Step.Invalid("only environment is supported for ENVIRONMENT_SETUP")
         }
 
+    /// specify a GIVEN gherkin clause
     let GIVEN setPreconditions stepTask =
         task {
 
@@ -88,6 +95,7 @@ module BDD =
                 | Result.Error(e) -> Step.Invalid(e)
         }
 
+    /// specify a WHEN gherkin clause
     let WHEN action stepTask =
         task {
 
@@ -114,6 +122,7 @@ module BDD =
             return r
         }
 
+    /// Specify an assert in THEN gherkin format
     let THEN assertAction stepTask =
         task {
 
@@ -126,6 +135,7 @@ module BDD =
             | _ -> return Step.Invalid($"{step} is not supported in WHEN clause")
         }
 
+    /// Conclude the pipeline of steps
     let END stepTask =
         task {
 
@@ -141,35 +151,35 @@ module BDD =
         }
 
 
-    // [<Fact>] sample
-    let ``when i call /hello i get 'world' back with 200 ok`` (testClient: TestClient<_>) =
+// [<Fact>] sample
+// let ``when i call /hello i get 'world' back with 200 ok`` (testClient: TestClient<_>) =
 
-        let stubData = [ 1, 2, 3 ]
+//     let stubData = [ 1, 2, 3 ]
 
-        testClient { GET "/hello" (fun _ _ -> $"hello world {stubData}" |> R_TEXT) }
-        |> SCENARIO "when i call /hello i get 'world' back with 200 ok"
-        |> SETUP
-            (fun s ->
-                task {
+//     testClient { GET "/hello" (fun _ _ -> $"hello world {stubData}" |> R_TEXT) }
+//     |> SCENARIO "when i call /hello i get 'world' back with 200 ok"
+//     |> SETUP
+//         (fun s ->
+//             task {
 
-                    let test = s.TestClient
+//                 let test = s.TestClient
 
-                    let f = test.GetFactory()
+//                 let f = test.GetFactory()
 
-                    return
-                        { Client = f.CreateClient()
-                          Factory = f
-                          Scenario = s
-                          FeatureStubData = stubData }
-                })
-            (fun c -> c)
-        |> GIVEN(fun g -> "hello" |> Task.FromResult)
-        |> WHEN(fun g ->
-            task {
-                let! (r: HttpResponseMessage) = g.Environment.Client.GetAsync("/Hello")
-                return! r.Content.ReadAsStringAsync()
-            })
-        |> THEN(fun w ->
-            let _ = ("hello world 1,2,3" = w.AssertData)
-            ())
-        |> END
+//                 return
+//                     { Client = f.CreateClient()
+//                       Factory = f
+//                       Scenario = s
+//                       FeatureStubData = stubData }
+//             })
+//         (fun c -> c)
+//     |> GIVEN(fun g -> "hello" |> Task.FromResult)
+//     |> WHEN(fun g ->
+//         task {
+//             let! (r: HttpResponseMessage) = g.Environment.Client.GetAsync("/Hello")
+//             return! r.Content.ReadAsStringAsync()
+//         })
+//     |> THEN(fun w ->
+//         let _ = ("hello world 1,2,3" = w.AssertData)
+//         ())
+//     |> END

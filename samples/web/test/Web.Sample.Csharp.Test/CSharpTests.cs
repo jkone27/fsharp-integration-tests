@@ -7,7 +7,7 @@ using Web.Sample;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
 using static ApiStub.FSharp.CE;
-using static ApiStub.Fsharp.CsharpExtensions;
+using static ApiStub.Fsharp.CSharp.CsharpExtensions;
 
 public class CSharpTests
 {

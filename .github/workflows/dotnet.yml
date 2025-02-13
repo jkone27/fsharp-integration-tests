@@ -31,4 +31,4 @@ jobs:
       # Main branch only
       if: github.ref == 'refs/heads/main'
       run: | 
-        dotnet nuget push **/*.nupkg --api-key ${{secrets.NUGET_KEY}} --skip-duplicate
+        dotnet nuget push **/*.nupkg --api-key ${{secrets.NUGET_KEY}} --skip-duplicates
