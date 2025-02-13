@@ -1,7 +1,7 @@
 <Project>
     <PropertyGroup>
         <RepositoryUrl>https://github.com/jkone27/fsharp-integration-tests</RepositoryUrl>
-        <FsDocsLicenseLink>https://github.com/jkone27/fsharp-integration-tests/blob/master/License</FsDocsLicenseLink>
+        <FsDocsLicenseLink>https://raw.githubusercontent.com/jkone27/fsharp-integration-tests/refs/heads/main/LICENSE</FsDocsLicenseLink>
         <FsDocsReleaseNotesLink>https://github.com/jkone27/fsharp-integration-tests/blob/master/RELEASE_NOTES.md</FsDocsReleaseNotesLink>
         <PackageProjectUrl>https://github.com/jkone27/fsharp-integration-tests</PackageProjectUrl>
     </PropertyGroup>
