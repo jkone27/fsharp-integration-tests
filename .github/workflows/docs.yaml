@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@v4
       # Setup dotnet, please use a global.json to ensure the right SDK is used!
       - name: Setup .NET
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
       # Restore the local tools
       - name: Restore tools
         run: dotnet tool restore
@@ -32,7 +32,7 @@ jobs:
         run: dotnet fsdocs build --properties Configuration=Release
       # Upload the static files
       - name: Upload documentation
-        uses: actions/upload-pages-artifact@v2
+        uses: actions/upload-pages-artifact@v3
         with:
           path: ./output
   
@@ -43,4 +43,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v2
+        uses: actions/deploy-pages@v4
