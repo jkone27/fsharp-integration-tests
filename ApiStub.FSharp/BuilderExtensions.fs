@@ -7,6 +7,7 @@ open System.Threading.Tasks
 open System
 open Microsoft.AspNetCore.TestHost
 
+/// Utility methods for aspnetcore configuration
 module BuilderExtensions =
 
     let configure_services (configure: IServiceCollection -> 'a) (builder: IWebHostBuilder) : IWebHostBuilder =

@@ -15,6 +15,13 @@
         "husky"
       ],
       "rollForward": false
+    },
+    "fsdocs-tool": {
+      "version": "20.0.1",
+      "commands": [
+        "fsdocs"
+      ],
+      "rollForward": false
     }
   }
 }

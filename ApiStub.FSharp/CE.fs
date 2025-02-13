@@ -9,6 +9,7 @@ open Microsoft.Extensions.Http
 open Microsoft.AspNetCore.Routing.Template
 open Microsoft.AspNetCore.Routing
 
+/// computation expression module (builder CE), contains `TestClient<T>` that wraps `WebApplicationFactory<T>`
 module CE =
     open BuilderExtensions
     open HttpResponseHelpers
@@ -17,6 +18,7 @@ module CE =
     let private toAsync stub =
         fun req args -> task { return stub req args }
 
+    /// `TestClient<T>` wraps `WebApplicationFactory<T>` and exposes a builder CE with utility to define api client stubs and other features
     type TestClient<'T when 'T: not struct>() =
 
         let factory = new WebApplicationFactory<'T>()
