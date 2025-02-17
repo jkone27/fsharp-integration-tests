@@ -29,7 +29,7 @@ jobs:
         run: dotnet build -c Release ApiStub.FSharp.sln
       # Generate the documentation files
       - name: Generate the documentation'
-        run: dotnet fsdocs build --properties Configuration=Release --parameters root--root "https://raw.githubusercontent.com/${{ github.repository }}/refs/heads/${{ github.ref_name }}/"
+        run: dotnet fsdocs build --properties Configuration=Release --parameters root "https://raw.githubusercontent.com/${{ github.repository }}/refs/heads/${{ github.ref_name }}/"
       # Upload the static files
       - name: Upload documentation
         uses: actions/upload-pages-artifact@v3
