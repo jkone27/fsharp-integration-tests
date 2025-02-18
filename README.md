@@ -11,7 +11,7 @@
 
 This library makes use of [F# computation expressions](https://learn.microsoft.com/en-us/dotnet/fsharp/language-reference/computation-expressions) to hide some complexity of `WebApplicationFactory` and provide the user with a *domain specific language* (DSL) for integration tests. 
 
-A C# API is also available, access the [documentation](/docs/index.md) website for more info on how to use this library.  
+A C# API is also available, access the [documentation](https://jkone27.github.io/fsharp-integration-tests/) website for more info on how to use this library.  
 
 ```fsharp
 open ApiStub.FSharp.CE
