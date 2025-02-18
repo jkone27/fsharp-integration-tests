@@ -25,22 +25,17 @@ To use the CE, you must build your CE object first by passing the generic `Progr
 Suppose in your main app (`Program` or `Startup`) you call `Services.AddApiClient`(or its variants) twice, registering 2 API clients to make calls to other services, say to the outbound routes `/externalApi` and `/anotherApi` (let's skip the base address for now).
 suppose `ExternalApiClient` invokes an http `GET` method and the other client makes a `POST` http call, inside your API client code. 
 
-```mermaid
+<br>
+<div class="mermaid text-center">
 sequenceDiagram
-    participant TestClient as Test
-    participant MainApp as App
-    participant DependencyApp1 as ApiDep1 
-    participant DependencyApp2 as ApiDep2
-
-    TestClient->>MainApp: GET /Hello
-    MainApp->>DependencyApp1: GET /externalApi
-    DependencyApp1-->>MainApp: Response
-    MainApp->>DependencyApp2: POST /anotherApi
-    DependencyApp2-->>MainApp: Response
-    MainApp-->>TestClient: Response
-
-```
-
+    Test->>App: GET /Hello
+    App->>ApiDep1: GET /externalApi
+    ApiDep1-->>App: Response
+    App->>ApiDep2: POST /anotherApi
+    ApiDep2-->>App: Response
+    App-->>Test: Response
+</div>
+<br>
 ### HTTP Mocks 🤡
 
 It's easy to **mock** those http clients dependencies (with data stubs) during integration tests making use of `ApiStub.FSharp` lib, saving quite some code compared to manually implementing the `WebApplicationFactory<T>` pattern, let's see how below.
@@ -297,4 +292,3 @@ module Tests =
 * more info on [F# xunit testing](https://learn.microsoft.com/en-us/dotnet/core/testing/unit-testing-fsharp-with-dotnet-test).
 * more general info on aspnetcore integration testing if you use [Nunit](https://learn.microsoft.com/en-us/dotnet/core/testing/unit-testing-fsharp-with-nunit) instead.
 * [aspnetcore integration testing](https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests?view=aspnetcore-7.0) docs in C#
-
