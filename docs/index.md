@@ -25,6 +25,22 @@ To use the CE, you must build your CE object first by passing the generic `Progr
 Suppose in your main app (`Program` or `Startup`) you call `Services.AddApiClient`(or its variants) twice, registering 2 API clients to make calls to other services, say to the outbound routes `/externalApi` and `/anotherApi` (let's skip the base address for now).
 suppose `ExternalApiClient` invokes an http `GET` method and the other client makes a `POST` http call, inside your API client code. 
 
+```mermaid
+sequenceDiagram
+    participant TestClient as Test
+    participant MainApp as App
+    participant DependencyApp1 as ApiDep1 
+    participant DependencyApp2 as ApiDep2
+
+    TestClient->>MainApp: GET /Hello
+    MainApp->>DependencyApp1: GET /externalApi
+    DependencyApp1-->>MainApp: Response
+    MainApp->>DependencyApp2: POST /anotherApi
+    DependencyApp2-->>MainApp: Response
+    MainApp-->>TestClient: Response
+
+```
+
 ### HTTP Mocks 🤡
 
 It's easy to **mock** those http clients dependencies (with data stubs) during integration tests making use of `ApiStub.FSharp` lib, saving quite some code compared to manually implementing the `WebApplicationFactory<T>` pattern, let's see how below.
