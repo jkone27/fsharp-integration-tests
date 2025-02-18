@@ -13,6 +13,23 @@ This library makes use of [F# computation expressions](https://learn.microsoft.c
 
 A C# API is also available, access the [documentation](/docs/index.md) website for more info on how to use this library.  
 
+## Scenario
+
+```mermaid
+sequenceDiagram
+    participant TestClient as Test
+    participant MainApp as App
+    participant DependencyApp as Dep
+
+    TestClient->>MainApp: GET /Hello
+    MainApp->>DependencyApp: GET /externalApi
+    DependencyApp-->>MainApp: Response
+    MainApp-->>TestClient: Response
+
+```
+
+## Test
+
 ```fsharp
 open ApiStub.FSharp.CE
 open ApiStub.FSharp.BuilderExtensions
