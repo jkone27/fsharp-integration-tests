@@ -1,0 +1,10 @@
+# sample usage
+# https://github.com/typicode/json-server
+# http://localhost:3000/persons?age=25
+# http://localhost:3000/persons/1
+
+FROM node:alpine3.19
+RUN mkdir -p /app
+WORKDIR /app
+RUN npm install -g json-server
+CMD ["json-server", "--watch", "db.json", "--host", "0.0.0.0"]
