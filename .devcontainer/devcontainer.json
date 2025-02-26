@@ -1,0 +1,7 @@
+{
+  "tasks": {
+    "test": "dotnet tool restore && dotnet fsdocs build",
+    "build": "dotnet tool restore && dotnet build",
+    "launch": "dotnet tool restore && dotnet build && dotnet fsdocs watch"
+  }
+}
