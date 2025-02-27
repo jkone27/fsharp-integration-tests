@@ -1,7 +1,6 @@
 # ApiStub.FSharp [![NuGet Badge](https://img.shields.io/nuget/v/ApiStub.FSharp)](https://www.nuget.org/packages/ApiStub.FSharp) 🦔
 
-<img width="331" alt="Screenshot 2024-12-16 at 13 01 33" src="https://github.com/user-attachments/assets/5095d6cb-63bb-4644-836f-99b5355870fe" />
-
+![alt text](docs/img/ApiStub.FSharp.png)
 
 [![Ceasefire Now](https://badge.techforpalestine.org/ceasefire-now)](https://techforpalestine.org/learn-more)  
 [![Stand With Ukraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/badges/StandWithUkraine.svg)](https://stand-with-ukraine.pp.ua)  

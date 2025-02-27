@@ -1,6 +1,6 @@
 # ApiStub.FSharp
 
-<img width="331" alt="Screenshot 2024-12-16 at 13 01 33" src="https://github.com/user-attachments/assets/5095d6cb-63bb-4644-836f-99b5355870fe" />
+![alt text](img/ApiStub.FSharp.png)
 
 ## Easy API Testing 🧞‍♀️
 
