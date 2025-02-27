@@ -25,7 +25,7 @@
         "group": "post-commit",
         "command": "dotnet",
         "args": [
-            "versionize"
+            "versionize", "--ignore-insignificant-commits"
         ]
      }
    ]
