@@ -1,14 +1,10 @@
-# ApiStub.FSharp
+<!-- # ApiStub.FSharp -->
 
-<img width="331" alt="Screenshot 2024-12-16 at 13 01 33" src="https://github.com/user-attachments/assets/5095d6cb-63bb-4644-836f-99b5355870fe" />
+![alt text](img/ApiStub.FSharp.png)
 
 ## Easy API Testing 🧞‍♀️
 
-You have an ASP NET NET6+ (NET6 is LTS in 2023) aspnetcore API, and you want to simplify HTTP stubs for [integration
-testing](https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests?view=aspnetcore-9.0) using `WebApplicationFactory`, 
-but you find that a bit cumbersome sometimes? 
-
-this library is here to help you!
+This library makes use of [F# computation expressions](https://learn.microsoft.com/en-us/dotnet/fsharp/language-reference/computation-expressions) or CEs to wrap some complexities of `WebApplicationFactory<T>` when setting up `integration tests` for a `.NET` Web app. It comes with a *domain specific language* (DSL) for "mocking" HttpClient factory in integration tests, and more.
 
 ### Test .NET C# 🤝 from F#
 
@@ -36,11 +32,12 @@ sequenceDiagram
     App-->>Test: Response
 </div>
 <br>
+
 ### HTTP Mocks 🤡
 
 It's easy to **mock** those http clients dependencies (with data stubs) during integration tests making use of `ApiStub.FSharp` lib, saving quite some code compared to manually implementing the `WebApplicationFactory<T>` pattern, let's see how below.
 
-## F#
+## F# 🦔 ✨
 
 * `Program`: to be able to make use of `Program.fs` (e.g. minimal api) as `TestClient<Program>()`, make sure to declare an empty `type Program = end class` on top of your Program module containing the `[<EntryPoint>] main args` method.
 
@@ -75,7 +72,7 @@ module Tests =
         } 
 ```
 
-## C# - v.1.1.0
+## C# 🤖 for 👴🏽🦖🦕
 
 if you prefer to use C# for testing, some extension methods are provided to use with C# as well:  
 
@@ -96,9 +93,12 @@ var webAppFactory = new CE.TestClient<Web.Sample.Program>()
 
 ```
 
-## Mechanics
+## Mechanics 👨🏽‍🔧⚙️
 
-This library makes use of [F# computation expressions](https://learn.microsoft.com/en-us/dotnet/fsharp/language-reference/computation-expressions) to hide some complexity of `WebApplicationFactory` and provide the user with a *domain specific language* (DSL) for integration tests in aspnetcore apps.
+This library makes use of [F# computation expressions](https://learn.microsoft.com/en-us/dotnet/fsharp/language-reference/computation-expressions) to hide some complexity of `WebApplicationFactory` and provide the user with a *domain specific language* (DSL) for integration tests in aspnetcore apps.  
+
+🪆📦 > The main "idea" behind this library is having a CE builder that wraps the creation of a `russian doll` or `chinese boxes` of HttpHandlers to handle mocking requests to http client instances in your application under test or SUT.
+
 The best way to understand how it all works is checking the [code](https://github.com/jkone27/fsharp-integration-tests/blob/249c3244cd7e20e2168b82a49b6e7e14f2ad1004/ApiStub.FSharp/CE.fs#L176) and this member CE method `GetFactory()` in scope.
 
 If you have ideas for improvements feel free to open an issue/discussion! 
@@ -287,8 +287,18 @@ module Tests =
 * feel free to get in touch, to fork and check out the repo
 * test and find use cases for this library, testing in F# is awesome!!!!
 
-### References
+### References 📚
 
 * more info on [F# xunit testing](https://learn.microsoft.com/en-us/dotnet/core/testing/unit-testing-fsharp-with-dotnet-test).
 * more general info on aspnetcore integration testing if you use [Nunit](https://learn.microsoft.com/en-us/dotnet/core/testing/unit-testing-fsharp-with-nunit) instead.
 * [aspnetcore integration testing](https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests?view=aspnetcore-7.0) docs in C#
+
+### 🕊️🌎🌳
+
+<a href='https://juststopoil.org/' target="_blank"><img alt='JUST_STOP_OIL' src='https://img.shields.io/badge/Just_STOP OIL-100000?style=plastic&logo=JUST_STOP_OIL&logoColor=white&labelColor=FFA600&color=000000'/></a>
+
+[![Stand With Ukraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/badges/StandWithUkraine.svg)](https://stand-with-ukraine.pp.ua)
+
+[![Ceasefire Now](https://badge.techforpalestine.org/ceasefire-now)](https://techforpalestine.org/learn-more)
+
+

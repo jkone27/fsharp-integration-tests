@@ -1,17 +1,20 @@
 # ApiStub.FSharp [![NuGet Badge](https://img.shields.io/nuget/v/ApiStub.FSharp)](https://www.nuget.org/packages/ApiStub.FSharp) 🦔
 
-<img width="331" alt="Screenshot 2024-12-16 at 13 01 33" src="https://github.com/user-attachments/assets/5095d6cb-63bb-4644-836f-99b5355870fe" />
+![alt text](docs/img/ApiStub.FSharp.png)
 
-
-[![Ceasefire Now](https://badge.techforpalestine.org/ceasefire-now)](https://techforpalestine.org/learn-more)  
-[![Stand With Ukraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/badges/StandWithUkraine.svg)](https://stand-with-ukraine.pp.ua)  
 <a href='https://juststopoil.org/' target="_blank"><img alt='JUST_STOP_OIL' src='https://img.shields.io/badge/Just_STOP OIL-100000?style=plastic&logo=JUST_STOP_OIL&logoColor=white&labelColor=FFA600&color=000000'/></a>  
+[![Stand With Ukraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/badges/StandWithUkraine.svg)](https://stand-with-ukraine.pp.ua)  
+[![Ceasefire Now](https://badge.techforpalestine.org/ceasefire-now)](https://techforpalestine.org/learn-more)  
 
 ## Easy API Testing 🧞‍♀️
 
-This library makes use of [F# computation expressions](https://learn.microsoft.com/en-us/dotnet/fsharp/language-reference/computation-expressions) to hide some complexity of `WebApplicationFactory` and provide the user with a *domain specific language* (DSL) for integration tests. 
+This library makes use of [F# computation expressions](https://learn.microsoft.com/en-us/dotnet/fsharp/language-reference/computation-expressions) 🪔✨  to hide some complexity of `WebApplicationFactory` and provide the user with a *domain specific language* (DSL) for integration tests. 
 
-A C# API is also available, access the [documentation](https://jkone27.github.io/fsharp-integration-tests/) website for more info on how to use this library.  
+An "antique" C# API (👴🏽🦖🦕) is also available since v.1.1 for enhanced accessibility 😺.
+
+## Documentation
+
+Access the [documentation website](https://jkone27.github.io/fsharp-integration-tests/)  for more info on how to use this library.  
 
 ## Scenario
 
