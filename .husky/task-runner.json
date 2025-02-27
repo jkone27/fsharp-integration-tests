@@ -17,7 +17,6 @@
      },
      {
         "name": "commit-message-linter",
-        "group": "commit-msg",
         "command": "dotnet",
         "args": ["husky", "exec", ".husky/csx/commit-lint.csx", "--args", "${args}"]
      },
