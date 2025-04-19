@@ -78,6 +78,16 @@ if you prefer to use C# for testing, some extension methods are provided to use 
 
 `GETJ, PUTJ, POSTJ, DELETEJ`
 
+Remember to add this snippet at the end of your `Program.cs` file for the `TestClient` to be able to pick up your configuration:
+
+```csharp
+// Program.cs
+
+// ... all your code, until end of file. 
+
+public partial class Program { }
+```
+
 If you want to access more overloads, you can access the inspect `TestClient<T>` members and create your custom extension methods easilly.
 
 ```csharp
