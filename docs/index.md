@@ -21,8 +21,7 @@ To use the CE, you must build your CE object first by passing the generic `Progr
 Suppose in your main app (`Program` or `Startup`) you call `Services.AddHttpClient`(or its variants) twice, registering 2 API clients to make calls to other services, say to the outbound routes `/externalApi` and `/anotherApi` (let's skip the base address for now).
 suppose `ExternalApiClient` invokes an http `GET` method and the other client makes a `POST` http call, inside your API client code. 
 
-<br>
-<div class="mermaid text-center">
+```mermaid
 sequenceDiagram
     Test->>App: GET /Hello
     App->>ApiDep1: GET /externalApi
@@ -30,8 +29,7 @@ sequenceDiagram
     App->>ApiDep2: POST /anotherApi
     ApiDep2-->>App: Response
     App-->>Test: Response
-</div>
-<br>
+```
 
 ### HTTP Mocks 🤡
 
