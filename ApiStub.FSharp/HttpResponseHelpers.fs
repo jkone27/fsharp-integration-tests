@@ -1,6 +1,5 @@
 namespace ApiStub.FSharp
 
-open System.Threading.Tasks
 open System.Net.Http
 open System
 open System.Net
@@ -9,7 +8,7 @@ open System.Text.Json
 
 module HttpResponseHelpers =
 
-    let inline R_OK contentType content =
+    let inline R_OK (contentType: string) (content: string) =
         let response = new HttpResponseMessage(HttpStatusCode.OK)
         response.Content <- new StringContent(content, Text.Encoding.UTF8, contentType)
         response
@@ -33,9 +32,7 @@ module HttpResponseHelpers =
 
 module HttpResponseMessageExtensions =
 
-    open HttpResponseHelpers
-
-    type System.Net.Http.HttpResponseMessage with
+    type HttpResponseMessage with
 
         member this.EnsureSuccessOrFailWithContent() =
             task {

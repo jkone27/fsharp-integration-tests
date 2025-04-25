@@ -79,7 +79,6 @@ module CE =
 
             this
 
-
         [<CustomOperation("stub")>]
         member this.Stub
             (
