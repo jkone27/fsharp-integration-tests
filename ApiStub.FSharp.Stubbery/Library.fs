@@ -65,6 +65,19 @@ module StubberyCE =
         member this.Put(x, route, stub) =
             this.Stub(x, [| HttpMethod.Put |], route, stub)
 
+        [<CustomOperation("PUT_OBJ")>]
+        member this.PutObj(x, route, stub) =
+            this.StubObj(x, [| HttpMethod.Put |], route, (fun _ -> stub))
+
+        [<CustomOperation("PATCH")>]
+        member this.Patch(x, route, stub) =
+            this.Stub(x, [| HttpMethod.Patch |], route, stub)
+
+        [<CustomOperation("PATCH_OBJ")>]
+        member this.PatchObj(x, route, stub) =
+            this.StubObj(x, [| HttpMethod.Patch |], route, (fun _ -> stub))
+
+
         [<CustomOperation("DELETE")>]
         member this.Delete(x, route, stub) =
             this.Stub(x, [| HttpMethod.Delete |], route, stub)
