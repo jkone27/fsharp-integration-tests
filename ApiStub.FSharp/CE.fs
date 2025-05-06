@@ -25,11 +25,10 @@ module CE =
         let mutable httpMessageHandler: DelegatingHandler = null
 
         let customConfigureServices =
-            new ResizeArray<IServiceCollection -> IServiceCollection>()
+            ResizeArray<IServiceCollection -> IServiceCollection>()
 
         let customConfigureTestServices =
-            new ResizeArray<IServiceCollection -> IServiceCollection>()
-
+            ResizeArray<IServiceCollection -> IServiceCollection>()
 
         interface IDisposable with
             member this.Dispose() = factory.Dispose()
@@ -52,13 +51,12 @@ module CE =
                 useRealHttpClient
             ) =
 
-            let routeValueDict = new RouteValueDictionary()
+            let routeValueDict = RouteValueDictionary()
 
             let templateMatcher =
                 try
-
                     let rt = TemplateParser.Parse(routeTemplate.TrimStart('/'))
-                    let tm = new TemplateMatcher(rt, routeValueDict)
+                    let tm = TemplateMatcher(rt, routeValueDict)
                     Some(tm)
                 with _ ->
                     None
@@ -167,6 +165,21 @@ module CE =
         member this.PutJson(x, route, stub: obj) =
             this.StubJson(x, [| HttpMethod.Put |], route, stub)
 
+        /// stub PATCH json
+        [<CustomOperation("PATCH_ASYNC")>]
+        member this.PatchAsync(x, route, stub) =
+            this.StubAsync(x, [| HttpMethod.Patch |], route, stub)
+
+        /// stub PATCH
+        [<CustomOperation("PATCH")>]
+        member this.Patch(x, route, stub) =
+            this.Stub(x, [| HttpMethod.Patch |], route, stub)
+
+        /// stub PATCH json
+        [<CustomOperation("PATCHJ")>]
+        member this.PatchJson(x, route, stub: obj) =
+            this.StubJson(x, [| HttpMethod.Patch |], route, stub)
+
         /// stub DELETE
         [<CustomOperation("DELETE")>]
         member this.Delete(x, route, stub) =
@@ -207,7 +220,7 @@ module CE =
                             else
                                 String.Empty
 
-                        let newBase = new Uri(new Uri("http://127.0.0.1/"), path)
+                        let newBase = Uri(Uri("http://127.0.0.1/"), path)
                         c.BaseAddress <- newBase)
                     |> ignore)
                 |> ignore

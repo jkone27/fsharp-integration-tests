@@ -19,3 +19,7 @@ type CsharpExtensions =
     [<Extension>]
     static member DELETEJ<'a when 'a: not struct>(x: TestClient<'a>, route: string, stub: obj) =
         x.DeleteJson(x, route, stub)
+
+    [<Extension>]
+    static member PATCHJ<'a when 'a: not struct>(x: TestClient<'a>, route: string, stub: obj) =
+        x.PatchJson(x, route, stub)
