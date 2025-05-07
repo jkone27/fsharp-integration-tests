@@ -21,7 +21,8 @@ To use the CE, you must build your CE object first by passing the generic `Progr
 Suppose in your main app (`Program` or `Startup`) you call `Services.AddHttpClient`(or its variants) twice, registering 2 API clients to make calls to other services, say to the outbound routes `/externalApi` and `/anotherApi` (let's skip the base address for now).
 suppose `ExternalApiClient` invokes an http `GET` method and the other client makes a `POST` http call, inside your API client code. 
 
-```mermaid
+<br>
+<div class="mermaid text-center">
 sequenceDiagram
     Test->>App: GET /Hello
     App->>ApiDep1: GET /externalApi
@@ -29,7 +30,8 @@ sequenceDiagram
     App->>ApiDep2: POST /anotherApi
     ApiDep2-->>App: Response
     App-->>Test: Response
-```
+</div>
+<br>
 
 ### HTTP Mocks 🤡
 
@@ -74,7 +76,7 @@ module Tests =
 
 if you prefer to use C# for testing, some extension methods are provided to use with C# as well:  
 
-`GETJ, PUTJ, POSTJ, DELETEJ`
+`GETJ, PUTJ, POSTJ, DELETEJ, PATCHJ`
 
 Remember to add this snippet at the end of your `Program.cs` file for the `TestClient` to be able to pick up your configuration:
 
@@ -128,7 +130,7 @@ Available HTTP methods in the test dsl to "mock" HTTP client responses are the f
 
 ### Basic
 
-* `GET`, `PUT`, `POST`, `DELETE` - for accessing request, route parameters and sending back HttpResponseMessage (e.g. using R_JSON or other constructors)
+* `GET`, `PUT`, `POST`, `DELETE`, `PATCH` - for accessing request, route parameters and sending back HttpResponseMessage (e.g. using R_JSON or other constructors)
 
 ```fsharp
     // example of control on request and route value dictionary
@@ -141,7 +143,7 @@ Available HTTP methods in the test dsl to "mock" HTTP client responses are the f
 
 ### JSON 📒
 
-* `GETJ`, `PUTJ`, `POSTJ`, `DELETEJ` - for objects converted to JSON content
+* `GETJ`, `PUTJ`, `POSTJ`, `DELETEJ`, `PATCHJ` - for objects converted to JSON content
 
 ```fsharp
 GETJ "/yetAnotherOne" {| Success = true |}
@@ -149,7 +151,7 @@ GETJ "/yetAnotherOne" {| Success = true |}
 
 ### ASYNC Overloads (task) ⚡️
 
-* `GET_ASYNC`, `PUT_ASYNC`, `POST_ASYNC`, `DELETE_ASYNC` - for handling asynchronous requests inside a task computation expression (async/await) and mock dynamically
+* `GET_ASYNC`, `PUT_ASYNC`, `POST_ASYNC`, `DELETE_ASYNC`, `PATCH_ASYNC` - for handling asynchronous requests inside a task computation expression (async/await) and mock dynamically
 
 ```fsharp
 // example of control on request and route value dictionary
