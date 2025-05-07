@@ -8,7 +8,7 @@ open System.Text.Json
 
 module HttpResponseHelpers =
 
-    let inline R_OK (contentType: string) (content: string) =
+    let inline R_OK contentType content =
         let response = new HttpResponseMessage(HttpStatusCode.OK)
         response.Content <- new StringContent(content, Text.Encoding.UTF8, contentType)
         response
