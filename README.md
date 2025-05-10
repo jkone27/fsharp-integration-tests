@@ -32,6 +32,8 @@ sequenceDiagram
 ```
 
 ## Test 🧪
+
+using `F#`
   
 ```fsharp
 open ApiStub.FSharp.CE
@@ -42,7 +44,7 @@ open Xunit
 module Tests =
 
     // build your aspnetcore integration testing CE
-    let test = new TestClient<Startup>()
+    let test = new TestClient<Program>()
 
     [<Fact>]
     let ``Calls Hello and returns OK`` () =
@@ -58,7 +60,29 @@ module Tests =
 
             let! r = client.GetAsync("/Hello")
 
+            // rest of your tests...
+
         }
+```
+
+or in `C#` if you prefer
+
+```csharp
+using ApiStub.FSharp;
+using static ApiStub.Fsharp.CsharpExtensions; 
+
+async Task CallsHelloAndReturnsOk () {
+
+    var client = 
+        new CE.TestClient<Web.Sample.Program>()
+            .GETJ("/externalApi", new { Ok = "Yeah" })
+            .GetFactory()
+            .CreateClient();
+
+    var r = await client.GetAsync("/Hello");
+
+    // rest of your tests...
+
 ```
 
 ### Test .NET C# 🤝 from F#
