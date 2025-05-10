@@ -3,7 +3,7 @@
   "isRoot": true,
   "tools": {
     "fantomas": {
-      "version": "6.0.5",
+      "version": "7.0.1",
       "commands": [
         "fantomas"
       ],
@@ -20,6 +20,13 @@
       "version": "20.0.1",
       "commands": [
         "fsdocs"
+      ],
+      "rollForward": false
+    },
+    "versionize": {
+      "version": "2.3.1",
+      "commands": [
+        "versionize"
       ],
       "rollForward": false
     }

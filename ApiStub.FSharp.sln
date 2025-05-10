@@ -9,8 +9,6 @@ Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "test", "test\ApiStub.FSharp
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "ApiStub.FSharp", "ApiStub.FSharp\ApiStub.FSharp.fsproj", "{F7EE43A1-C472-4B78-97AD-51B5435CC1BE}"
 EndProject
-Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "ApiStub.FSharp.Stubbery", "ApiStub.FSharp.Stubbery\ApiStub.FSharp.Stubbery.fsproj", "{24264817-88F6-4E55-B1E2-18FD5BA8397D}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D4C589F1-03B9-4E1D-BB6C-BFDFDD7AD169}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore

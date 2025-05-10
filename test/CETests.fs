@@ -26,8 +26,6 @@ open ApiStub.FSharp
 
 type MyOpenapi = OpenApiClientProvider<"swagger.json">
 
-type MutableUri = Stubbery.StubberyCE.MutableUri
-
 type CETests() =
 
     let testce = new CE.TestClient<Startup>()
