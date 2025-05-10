@@ -1,0 +1,54 @@
+name: Publish
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  publish:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v2
+      with:
+        dotnet-version: 6.0.x
+        source-url: https://api.nuget.org/v3/index.json
+      env:
+        NUGET_AUTH_TOKEN: ${{secrets.NUGET_KEY}}
+
+    - name: Setup Git 
+      uses: fregante/setup-git-user@v2
+
+    - name: Restore Dotnet Tools
+      run: dotnet tool restore
+
+    - name: Run Versionize
+      id: versionize
+      run: |
+        dotnet versionize
+      continue-on-error: true
+
+    - name: No release required
+      if: steps.versionize.outcome != 'success'
+      run: echo "Skipping publishing. No release required."
+
+    - name: Pack
+      if: steps.versionize.outcome == 'success'
+      run: dotnet pack --output ./nupkgs --include-source --configuration Release --include-symbols
+
+    - name: Push Package
+      if: steps.versionize.outcome == 'success'
+      run: dotnet nuget push ./nupkgs/*.nupkg --api-key ${{secrets.NUGET_KEY}} --skip-duplicate
+
+    - name: Push changes to GitHub
+      if: steps.versionize.outcome == 'success'
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: main
+        tags: true

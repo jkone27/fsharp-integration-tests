@@ -1,10 +1,12 @@
-name: .NET
+name: build-and-test
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
   build:
@@ -18,17 +20,12 @@ jobs:
       with:
         dotnet-version: 6.0.x
         source-url: https://api.nuget.org/v3/index.json
-      env:
-        NUGET_AUTH_TOKEN: ${{secrets.NUGET_KEY}}
 
+    - name: Restore Dotnet Tools
+      run: dotnet tool restore
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
       run: dotnet build --no-restore
     - name: Test
       run: dotnet test --no-build --verbosity normal
-    - name: Push Package
-      # Main branch only
-      if: github.ref == 'refs/heads/main'
-      run: | 
-        dotnet nuget push **/*.nupkg --api-key ${{secrets.NUGET_KEY}} --skip-duplicate

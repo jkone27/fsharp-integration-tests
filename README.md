@@ -73,6 +73,10 @@ In fact you can add an `.fsproj` within a C# aspnetcore solution `.sln`, and jus
 * feel free to get in touch, to fork and check out the repo
 * test and find use cases for this library, testing in F# is awesome!!!!
 
+## Versioning
+
+This repository uses [Versionize](https://github.com/versionize/versionize/blob/master/.github/workflows/publish.yml) as a local dotnet tool to version packages when publishing.
+
 ### References
 
 * more info on [F# xunit testing](https://learn.microsoft.com/en-us/dotnet/core/testing/unit-testing-fsharp-with-dotnet-test).
