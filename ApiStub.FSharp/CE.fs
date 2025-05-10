@@ -212,6 +212,10 @@ module CE =
                 s.ConfigureAll<HttpClientFactoryOptions>(fun options ->
                     options.HttpMessageHandlerBuilderActions.Add(fun builder ->
                         //builder.AdditionalHandlers.Add(httpMessageHandler) |> ignore
+
+                        if httpMessageHandler = null then
+                            failwith "no mocks were provided"
+
                         builder.PrimaryHandler <- httpMessageHandler)
 
                     options.HttpClientActions.Add(fun c ->
@@ -233,29 +237,3 @@ module CE =
             |> web_configure_test_services (fun s ->
                 for custom_config in customConfigureTestServices do
                     custom_config (s) |> ignore)
-
-    type MockClientHandler(handler: HttpMessageHandler, methods, templateMatcher: TemplateMatcher, responseStubber) =
-        inherit DelegatingHandler(handler)
-
-        override this.SendAsync(request, token) =
-            let wrappedBase = new AsyncCallableHandler(base.InnerHandler)
-
-            task {
-                let routeDict = new RouteValueDictionary()
-
-                if (methods |> Array.contains (request.Method) |> not) then
-                    return! wrappedBase.CallSendAsync(request, token)
-                else if
-                    (templateMatcher.TryMatch(request.RequestUri.AbsolutePath |> PathString, routeDict)
-                     |> not)
-                then
-                    return! wrappedBase.CallSendAsync(request, token)
-                else
-                    if (this.InnerHandler = null) then
-                        raise (InvalidOperationException("no mocks were provided"))
-                    // HTTP response stubbing happens here, the request has matched, go on with the stub
-                    let! (expected: HttpResponseMessage) = responseStubber request routeDict
-                    // reattach original request!!!
-                    expected.RequestMessage <- request
-                    return expected
-            }
