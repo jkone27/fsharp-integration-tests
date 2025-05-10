@@ -12,6 +12,6 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.1" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Update="FSharp.Core" Version="9.0.0" />
+    <PackageReference Update="FSharp.Core" Version="9.0.100" />
   </ItemGroup>
 </Project>
