@@ -31,8 +31,8 @@ sequenceDiagram
 
 ```
 
-## Test
-
+## Test 🧪
+  
 ```fsharp
 open ApiStub.FSharp.CE
 open ApiStub.FSharp.BuilderExtensions
@@ -72,6 +72,14 @@ In fact you can add an `.fsproj` within a C# aspnetcore solution `.sln`, and jus
 * Search for an open issue or report one, and check if a similar issue was reported first
 * feel free to get in touch, to fork and check out the repo
 * test and find use cases for this library, testing in F# is awesome!!!!
+
+## Commit linting 📝
+
+This project uses [Commitlint](https://commitlint.js.org/) npm package and [ConventionalCommits](https://www.conventionalcommits.org/en/v1.0.0/#summary) specification for commits, so be aware to follow them when committing, via [Husky.NET](https://alirezanet.github.io/Husky.Net/guide/getting-started.html#add-your-first-hook)
+
+## Versioning 📚
+
+This repository uses [Versionize](https://github.com/versionize/versionize/blob/master/.github/workflows/publish.yml) as a local dotnet tool to version packages when publishing. **Versionize** relies on [conventional commits](#commit-linting) to work properly.  
 
 ### References
 

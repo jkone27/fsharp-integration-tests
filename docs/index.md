@@ -260,52 +260,22 @@ module BDDTests =
 
 Please take a look at the examples in the `test` folder for more details on the usage.
 
-## ApiStub.FSharp.Stubbery ⚠️ 🐦
-
-A version using the [Stubbery](https://github.com/markvincze/Stubbery) library is also present for "compatibility" when migrating from `stubbery` versions of pre existing integration tests, in your integration tests setup.
-
-In general, it's advised to not have dependencies or run any in-memory HTTP server if possible, so the minimal version is preferred.
-
-NOTICE ⚠️: Stubbery will not be supported in adding new features or eventually might be not supported at all in the future.
-
-```fsharp
-open ApiStub.FSharp.Stubbery.StubberyCE
-open ApiStub.FSharp.BuilderExtensions
-open ApiStub.FSharp.HttpResponseHelpers
-open Xunit
-
-module Tests =
-
-    // build your aspnetcore integration testing CE using Stubbery library
-    // for serving HTTP stubs
-    let test_stubbery = new TestStubberyClient<Startup>()
-
-    [<Fact>]
-    let ``Integration test with stubbery`` () =
-
-        task {
-
-            let testApp =
-                test_stubbery { 
-                    GET "/externalApi" (fun r args -> expected |> box)
-                }
-
-            use client = testApp.GetFactory().CreateClient()
-
-            let! r = client.GetAsync("/Hello")
-
-            r.EnsureSuccessStatusCode()
-        } 
-```
-
-
 ## How to Contribute ✍️
 
 * Search for an open issue or report one, and check if a similar issue was reported first
 * feel free to get in touch, to fork and check out the repo
 * test and find use cases for this library, testing in F# is awesome!!!!
 
-### References 📚
+
+## Commit linting 📝
+
+This project uses [Commitlint](https://commitlint.js.org/) npm package and [ConventionalCommits](https://www.conventionalcommits.org/en/v1.0.0/#summary) specification for commits, so be aware to follow them when committing, via [Husky.NET](https://alirezanet.github.io/Husky.Net/guide/getting-started.html#add-your-first-hook)
+
+## Versioning 📚
+
+This repository uses [Versionize](https://github.com/versionize/versionize/blob/master/.github/workflows/publish.yml) as a local dotnet tool to version packages when publishing. **Versionize** relies on [conventional commits](#commit-linting) to work properly.  
+
+### References 🤓
 
 * more info on [F# xunit testing](https://learn.microsoft.com/en-us/dotnet/core/testing/unit-testing-fsharp-with-dotnet-test).
 * more general info on aspnetcore integration testing if you use [Nunit](https://learn.microsoft.com/en-us/dotnet/core/testing/unit-testing-fsharp-with-nunit) instead.

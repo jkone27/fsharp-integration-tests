@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <IsPackable>false</IsPackable>
     <GenerateProgramFile>true</GenerateProgramFile>
     <IsTestProject>true</IsTestProject>
@@ -9,30 +9,28 @@
     <Compile Include="CETests.fs" />
     <Compile Include="BDDTests.fs" />
     <Compile Include="BuilderExtensionsTests.fs" />
-    <Compile Include="StubberyTests.fs" />
     <Content Include="swagger.json" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="6.0.3" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.1.0" />
-    <PackageReference Include="Stubbery" Version="2.7.1" />
-    <PackageReference Include="SwaggerProvider" Version="1.0.0-beta5" />
-    <PackageReference Include="xunit" Version="2.4.1" />
-    <PackageReference Include="Unquote" Version="6.1.0"/>
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.15" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
+    <PackageReference Include="SwaggerProvider" Version="2.1.3" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="Unquote" Version="7.0.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="coverlet.collector" Version="3.1.2">
+    <PackageReference Include="coverlet.collector" Version="6.0.4">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\src\app.fsproj" />
-    <ProjectReference Include="..\ApiStub.FSharp.Stubbery\ApiStub.FSharp.Stubbery.fsproj" />
+    <ProjectReference Include="..\ApiStub.FSharp\ApiStub.FSharp.fsproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Update="FSharp.Core" Version="6.0.3" />
+    <PackageReference Update="FSharp.Core" Version="9.0.100" />
   </ItemGroup>
 </Project>
