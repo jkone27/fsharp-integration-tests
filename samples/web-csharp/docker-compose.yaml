@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  mock-server:
+    container_name: json-server
+    build:
+      context: .
+      dockerfile: JsonServerDocker
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./mock-data:/app

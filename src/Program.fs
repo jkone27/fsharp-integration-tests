@@ -3,6 +3,7 @@ namespace fsharpintegrationtests
 open Microsoft.Net.Http.Headers
 
 #nowarn "20"
+
 open System
 open System.Collections.Generic
 open System.IO
@@ -22,32 +23,38 @@ open Swashbuckle.AspNetCore
 type Startup(configuration: IConfiguration, env: IWebHostEnvironment) =
 
     abstract member ConfigureServices: IServiceCollection -> unit
+
     default this.ConfigureServices(services: IServiceCollection) =
 
         services.AddControllers()
 
         //make sure this is not the generic one
-        services.AddHttpClient("externalApiClient",
-            configureClient = fun httpClient ->
-                //generate your public request bin and replace here
-                httpClient.BaseAddress <- new Uri("https://enfir17jla5z.x.pipedream.net/")
-                ()
+        services.AddHttpClient(
+            "externalApiClient",
+            configureClient =
+                fun httpClient ->
+                    //generate your public request bin and replace here
+                    httpClient.BaseAddress <- new Uri("https://enfir17jla5z.x.pipedream.net/")
+                    ()
         )
 
-        services.AddHttpClient("anotherApiClient",
-            configureClient = fun httpClient ->
-                //generate your public request bin and replace here
-                httpClient.BaseAddress <- new Uri("https://enfir17jla5z.x.pipedream.net/another/")
-                ()
+        services.AddHttpClient(
+            "anotherApiClient",
+            configureClient =
+                fun httpClient ->
+                    //generate your public request bin and replace here
+                    httpClient.BaseAddress <- new Uri("https://enfir17jla5z.x.pipedream.net/another/")
+                    ()
         )
 
         services.AddEndpointsApiExplorer()
         services.AddSwaggerGen()
         ()
-        
+
     abstract member Configure: IApplicationBuilder -> unit
+
     default this.Configure(app: IApplicationBuilder) =
-        
+
         if env.IsDevelopment() then
             app.UseSwagger()
             app.UseSwaggerUI()
@@ -64,7 +71,7 @@ type Startup(configuration: IConfiguration, env: IWebHostEnvironment) =
 
 module public Program =
 
-    let createHost (args : string []) =
+    let createHost (args: string[]) =
         let builder = WebApplication.CreateBuilder(args)
 
         let st = new Startup(builder.Configuration, builder.Environment)

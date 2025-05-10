@@ -7,21 +7,20 @@ open System.Threading.Tasks
 open System
 open Microsoft.AspNetCore.TestHost
 
+/// Utility methods for aspnetcore configuration
 module BuilderExtensions =
 
-    let configure_services (configure : IServiceCollection -> 'a) (builder: IWebHostBuilder) : IWebHostBuilder =
-        builder.ConfigureServices(fun s -> configure(s) |> ignore)
+    let configure_services (configure: IServiceCollection -> 'a) (builder: IWebHostBuilder) : IWebHostBuilder =
+        builder.ConfigureServices(fun s -> configure (s) |> ignore)
 
-    let configure_test_services (configure : IServiceCollection -> 'a) (builder: IWebHostBuilder) : IWebHostBuilder =
-        builder.ConfigureTestServices(fun s -> configure(s) |> ignore)
+    let configure_test_services (configure: IServiceCollection -> 'a) (builder: IWebHostBuilder) : IWebHostBuilder =
+        builder.ConfigureTestServices(fun s -> configure (s) |> ignore)
 
-    let web_host_builder (builder : IWebHostBuilder -> 'a) (factory: WebApplicationFactory<'T>)   =
-        factory.WithWebHostBuilder(fun b -> builder(b) |> ignore)
+    let web_host_builder (builder: IWebHostBuilder -> 'a) (factory: WebApplicationFactory<'T>) =
+        factory.WithWebHostBuilder(fun b -> builder (b) |> ignore)
 
     let web_configure_services configure =
-        configure_services configure 
-        |> web_host_builder
+        configure_services configure |> web_host_builder
 
     let web_configure_test_services configure =
-        configure_test_services configure
-        |> web_host_builder
+        configure_test_services configure |> web_host_builder
