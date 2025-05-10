@@ -20,9 +20,9 @@ jobs:
       with:
         dotnet-version: 6.0.x
         source-url: https://api.nuget.org/v3/index.json
+      env:
+        NUGET_AUTH_TOKEN: ${{secrets.NUGET_KEY}}
 
-    - name: Restore Dotnet Tools
-      run: dotnet tool restore
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
