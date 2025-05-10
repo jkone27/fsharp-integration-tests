@@ -39,7 +39,7 @@ jobs:
 
     - name: Pack
       if: steps.versionize.outcome == 'success'
-      run: dotnet pack --output ./nupkgs --include-source --configuration Release --include-symbols
+      run: dotnet pack ./ApiStub.FSharp --output ./nupkgs --include-source --configuration Release --include-symbols
 
     - name: Push Package
       if: steps.versionize.outcome == 'success'
