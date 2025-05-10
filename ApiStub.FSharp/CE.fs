@@ -8,6 +8,7 @@ open System
 open Microsoft.Extensions.Http
 open Microsoft.AspNetCore.Routing.Template
 open Microsoft.AspNetCore.Routing
+open Microsoft.AspNetCore.Http
 
 /// computation expression module (builder CE), contains `TestClient<T>` that wraps `WebApplicationFactory<T>`
 module CE =
@@ -211,6 +212,10 @@ module CE =
                 s.ConfigureAll<HttpClientFactoryOptions>(fun options ->
                     options.HttpMessageHandlerBuilderActions.Add(fun builder ->
                         //builder.AdditionalHandlers.Add(httpMessageHandler) |> ignore
+
+                        if httpMessageHandler = null then
+                            failwith "no mocks were provided"
+
                         builder.PrimaryHandler <- httpMessageHandler)
 
                     options.HttpClientActions.Add(fun c ->
