@@ -31,6 +31,6 @@
     <ProjectReference Include="..\ApiStub.FSharp\ApiStub.FSharp.fsproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Update="FSharp.Core" Version="9.0.202" />
+    <PackageReference Update="FSharp.Core" Version="9.0.0" />
   </ItemGroup>
 </Project>
