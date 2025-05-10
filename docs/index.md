@@ -25,10 +25,10 @@ suppose `ExternalApiClient` invokes an http `GET` method and the other client ma
 <div class="mermaid text-center">
 sequenceDiagram
     Test->>App: GET /Hello
-    App->>ApiDep1: GET /externalApi
-    ApiDep1-->>App: Response
-    App->>ApiDep2: POST /anotherApi
-    ApiDep2-->>App: Response
+    App->>Dep1: GET /externalApi
+    Dep1-->>App: Response
+    App->>Dep2: POST /anotherApi
+    Dep2-->>App: Response
     App-->>Test: Response
 </div>
 <br>
@@ -39,7 +39,7 @@ It's easy to **mock** those http clients dependencies (with data stubs) during i
 
 ## F# 🦔 ✨
 
-* `Program`: to be able to make use of `Program.fs` (e.g. minimal api) as `TestClient<Program>()`, make sure to declare an empty `type Program = end class` on top of your Program module containing the `[<EntryPoint>] main args` method.
+* `Program`: to be able to make use of `Program.fs` (e.g. minimal api) as `TestClient<TEntryPoint>()`, make sure to declare an empty `type Program = end class` on top of your Program module containing the `[<EntryPoint>] main args` method. For older porjects `Startup` can be passed as` TEntryPoint` instead.
 
 
 ```fsharp
@@ -51,7 +51,7 @@ open Xunit
 module Tests =
 
     // build your aspnetcore integration testing CE
-    let test = new TestClient<Startup>()
+    let test = new TestClient<Program>()
 
     [<Fact>]
     let ``Calls Hello and returns OK`` () =
@@ -107,7 +107,15 @@ var webAppFactory = new CE.TestClient<Web.Sample.Program>()
 
 This library makes use of [F# computation expressions](https://learn.microsoft.com/en-us/dotnet/fsharp/language-reference/computation-expressions) to hide some complexity of `WebApplicationFactory` and provide the user with a *domain specific language* (DSL) for integration tests in aspnetcore apps.  
 
-🪆📦 > The main "idea" behind this library is having a CE builder that wraps the creation of a `russian doll` or `chinese boxes` of HttpHandlers to handle mocking requests to http client instances in your application under test or SUT.
+🪆📦 > The main "idea" behind this library is having a CE builder that wraps the creation of a [**russian doll**](https://github.com/jkone27/fsharp-integration-tests/blob/7082d89870bcf353a879c6fcacc74174cea81add/ApiStub.FSharp/CE.fs#L69) or **chinese boxes** of [MockHttpHandler](https://github.com/jkone27/fsharp-integration-tests/blob/7082d89870bcf353a879c6fcacc74174cea81add/ApiStub.FSharp/DelegatingHandlers.fs#L22)  to handle mocking requests to http client instances in your application under test or SUT.
+
+<div class="mermaid text-center">
+graph TD
+
+    test_ce -->|get| factory -->|get| test_client
+
+    test_client -->|HTTP| app
+</div>
 
 The best way to understand how it all works is checking the [code](https://github.com/jkone27/fsharp-integration-tests/blob/249c3244cd7e20e2168b82a49b6e7e14f2ad1004/ApiStub.FSharp/CE.fs#L176) and this member CE method `GetFactory()` in scope.
 
