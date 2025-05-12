@@ -14,7 +14,7 @@ In fact you can add an `.fsproj` within a C# aspnetcore solution `.sln`, and jus
 
 ## Usage
 
-To use the CE, you must build your CE object first by passing the generic `Program` (minimal api) or `Startup` (mvc) type argument to `TestClient<T>`.
+To use the CE, you must build your CE object first by passing the generic `Program` (minimal api) or `Startup` (mvc) type argument to `TestWebAppFactoryBuilder<T>`.
 
 ### Sample Use Case
 
@@ -39,7 +39,7 @@ It's easy to **mock** those http clients dependencies (with data stubs) during i
 
 ## F# 🦔 ✨
 
-* `Program`: to be able to make use of `Program.fs` (e.g. minimal api) as `TestClient<TEntryPoint>()`, make sure to declare an empty `type Program = end class` on top of your Program module containing the `[<EntryPoint>] main args` method. For older porjects `Startup` can be passed as` TEntryPoint` instead.
+* `Program`: to be able to make use of `Program.fs` (e.g. minimal api) as `TestWebAppFactoryBuilder<TEntryPoint>()`, make sure to declare an empty `type Program = end class` on top of your Program module containing the `[<EntryPoint>] main args` method. For older porjects `Startup` can be passed as` TEntryPoint` instead.
 
 
 ```fsharp
@@ -51,25 +51,23 @@ open Xunit
 module Tests =
 
     // build your aspnetcore integration testing CE
-    let test = new TestClient<Program>()
+    let test = new TestWebAppFactoryBuilder<Program>()
 
     [<Fact>]
-    let ``Calls Hello and returns OK`` () =
+    let ``Calls Hello and returns OK`` () = task {
 
-        task {
+        let testApp =
+            test { 
+                GETJ "/externalApi" {| Ok = "yeah" |}
+                POSTJ "/anotherApi" {| Whatever = "yeah" |}
+            }
 
-            let testApp =
-                test { 
-                    GETJ "/externalApi" {| Ok = "yeah" |}
-                    POSTJ "/anotherApi" {| Whatever = "yeah" |}
-                }
+        use client = testApp.GetFactory().CreateClient()
 
-            use client = testApp.GetFactory().CreateClient()
+        let! r = client.GetAsync("/Hello")
 
-            let! r = client.GetAsync("/Hello")
-
-            r.EnsureSuccessStatusCode()
-        } 
+        r.EnsureSuccessStatusCode()
+    } 
 ```
 
 ## C# 🤖 for 👴🏽🦖🦕
@@ -78,7 +76,7 @@ if you prefer to use C# for testing, some extension methods are provided to use 
 
 `GETJ, PUTJ, POSTJ, DELETEJ, PATCHJ`
 
-Remember to add this snippet at the end of your `Program.cs` file for the `TestClient` to be able to pick up your configuration:
+Remember to add this snippet at the end of your `Program.cs` file for the `TestWebAppFactoryBuilder` to be able to pick up your configuration:
 
 ```csharp
 // Program.cs
@@ -88,34 +86,52 @@ Remember to add this snippet at the end of your `Program.cs` file for the `TestC
 public partial class Program { }
 ```
 
-If you want to access more overloads, you can access the inspect `TestClient<T>` members and create your custom extension methods easilly.
+If you want to access more overloads, you can access the inspect `TestWebAppFactoryBuilder<T>` members and create your custom extension methods easilly.
 
 ```csharp
 using ApiStub.FSharp;
 using static ApiStub.Fsharp.CsharpExtensions; 
+using Xunit;
 
-var webAppFactory = new CE.TestClient<Web.Sample.Program>()
-    .GETJ(Clients.Routes.name, new { Name = "Peter" })
-    .GETJ(Clients.Routes.age, new { Age = 100 })
-    .GetFactory();
+public class Tests 
+{
 
-// factory.CreateClient(); // as needed later in your tests
+    [Fact]
+    public async Task CallsHelloAndReturnsOk()
+    {
+        var webAppFactory = new CE.TestWebAppFactoryBuilder<Web.Sample.Program>()
+            .GETJ(Clients.Routes.name, new { Name = "Peter" })
+            .GETJ(Clients.Routes.age, new { Age = 100 })
+            .GetFactory();
 
+        // factory.CreateClient(); // as needed later in your tests
+    }
+}
 ```
 
 ## Mechanics 👨🏽‍🔧⚙️
 
 This library makes use of [F# computation expressions](https://learn.microsoft.com/en-us/dotnet/fsharp/language-reference/computation-expressions) to hide some complexity of `WebApplicationFactory` and provide the user with a *domain specific language* (DSL) for integration tests in aspnetcore apps.  
 
-🪆📦 > The main "idea" behind this library is having a CE builder that wraps the creation of a [**russian doll**](https://github.com/jkone27/fsharp-integration-tests/blob/7082d89870bcf353a879c6fcacc74174cea81add/ApiStub.FSharp/CE.fs#L69) or **chinese boxes** of [MockHttpHandler](https://github.com/jkone27/fsharp-integration-tests/blob/7082d89870bcf353a879c6fcacc74174cea81add/ApiStub.FSharp/DelegatingHandlers.fs#L22)  to handle mocking requests to http client instances in your application under test or SUT.
+🪆📦 > The main "idea" behind this library is having a CE builder that wraps the creation of a [**russian doll**](https://github.com/jkone27/fsharp-integration-tests/blob/7082d89870bcf353a879c6fcacc74174cea81add/ApiStub.FSharp/CE.fs#L69) or **chinese boxes** of [MockHttpHandler](https://github.com/jkone27/fsharp-integration-tests/blob/7082d89870bcf353a879c6fcacc74174cea81add/ApiStub.FSharp/DelegatingHandlers.fs#L22) to handle mocking requests to http client instances in your application under test or SUT.
 
-<div class="mermaid text-center">
-graph TD
+The TestsClient CE acts as a reusable and shareable/composable builder CE for WebApplicationFactory...
 
-    test_ce -->|get| factory -->|get| test_client
+```fsharp
 
-    test_client -->|HTTP| app
-</div>
+(new TestWebAppFactoryBuilder<Program>()) // TestWebAppFactoryBuilder<T> is here a WebApplicationFactory (WAF) builder  in essence basically
+{
+    // --> add stub to builder for WAF
+    GETJ "A" {| Response = "OK" |}
+    // --> add stub to builder for WAF
+    GETJ "B" {| Response = "OK" |}
+    // --> add stub to builder for WAF
+    GETJ "C" {| Response = "OK" |}
+
+    // each call adds to WAF builder
+}
+|> _.GetFactory() // until this point the builder can be decorated further / shared / reused in specific test flows
+```
 
 The best way to understand how it all works is checking the [code](https://github.com/jkone27/fsharp-integration-tests/blob/249c3244cd7e20e2168b82a49b6e7e14f2ad1004/ApiStub.FSharp/CE.fs#L176) and this member CE method `GetFactory()` in scope.
 
@@ -191,7 +207,7 @@ You can use some BDD extension to perform [Gherkin-like setups and assertions](h
 
 they are all async `task` computations so they can be simply chained together:
 
-* `SCENARIO`: takes a `TestClient<TStartup>` as input and needs a name for your test scenario
+* `SCENARIO`: takes a `TestWebAppFactoryBuilder<TStartup>` as input and needs a name for your test scenario
 * `SETUP`: takes a scenario as input and can be used to configure the "test environmenttest": factory and the API client, additionally takes a separate API client configuration
 * `GIVEN`: takes a "test environment" or another "given" and returns a "given" step
 * `WHEN`: takes a "given" or another "when" step, and returns a a "when" step
@@ -205,7 +221,7 @@ open HttpResponseMessageExtensions
 
 module BDDTests =
 
-    let testce = new TestClient<Startup>()
+    let testce = new TestWebAppFactoryBuilder<Startup>()
 
     [<Fact>]
     let ``when i call /hello i get 'world' back with 200 ok`` () =
@@ -217,7 +233,7 @@ module BDDTests =
             // SETUP: additional factory or service or client configuration
             // and GIVEN the actual arrange for the test 3As.
                 
-            // setup your test as usual here, test_ce is an instance of TestClient<TStartup>()
+            // setup your test as usual here, test_ce is an instance of TestWebAppFactoryBuilder<TStartup>()
             test_ce {
                 POSTJ "/another/anotherApi" {| Test = "NOT_USED_VAL" |}
                 GET_ASYNC "/externalApi" (fun r _ -> task { 
@@ -227,7 +243,7 @@ module BDDTests =
             |> SCENARIO "when i call /Hello i get 'world' back with 200 ok"
             |> SETUP (fun s -> task {
             
-                let test = s.TestClient
+                let test = s.TestWebAppFactoryBuilder
                 
                 // any additiona services or factory configuration before this point
                 let f = test.GetFactory() 

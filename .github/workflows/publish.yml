@@ -1,9 +1,13 @@
 name: Publish
 
 on:
-  push:
-    branches:
+  # trigger only on completion of Build on main
+  workflow_run:
+    workflows: ["Build"]
+    branches: 
       - main
+    types:
+      - completed
 
 jobs:
   publish:
@@ -29,8 +33,7 @@ jobs:
 
     - name: Run Versionize
       id: versionize
-      run: |
-        dotnet versionize
+      run: dotnet versionize
       continue-on-error: true
 
     - name: No release required

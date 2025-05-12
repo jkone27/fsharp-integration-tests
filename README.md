@@ -20,14 +20,14 @@ Access the [documentation website](https://jkone27.github.io/fsharp-integration-
 
 ```mermaid
 sequenceDiagram
-    participant TestClient as Test
+    participant TestWebAppFactoryBuilder as Test
     participant MainApp as App
     participant DependencyApp as Dep
 
-    TestClient->>MainApp: GET /Hello
+    TestWebAppFactoryBuilder->>MainApp: GET /Hello
     MainApp->>DependencyApp: GET /externalApi
     DependencyApp-->>MainApp: Response
-    MainApp-->>TestClient: Response
+    MainApp-->>TestWebAppFactoryBuilder: Response
 
 ```
 
@@ -44,45 +44,49 @@ open Xunit
 module Tests =
 
     // build your aspnetcore integration testing CE
-    let test = new TestClient<Program>()
+    let test = new TestWebAppFactoryBuilder<Program>()
 
     [<Fact>]
-    let ``Calls Hello and returns OK`` () =
+    let ``Calls Hello and returns OK`` () = task {
 
-        task {
+        let client = 
+            test { 
+                GETJ "/externalApi" {| Ok = "yeah" |}
+            }
+            |> _.GetFactory()
+            |> _.CreateClient()
 
-            let client = 
-                test { 
-                    GETJ "/externalApi" {| Ok = "yeah" |}
-                }
-                |> _.GetFactory()
-                |> _.CreateClient()
+        let! r = client.GetAsync("/Hello")
 
-            let! r = client.GetAsync("/Hello")
+        // rest of your tests...
 
-            // rest of your tests...
-
-        }
+    }
 ```
 
 or in `C#` if you prefer
 
 ```csharp
 using ApiStub.FSharp;
+using Xunit;
 using static ApiStub.Fsharp.CsharpExtensions; 
 
-async Task CallsHelloAndReturnsOk () {
+public class Tests 
+{
+    [Fact]
+    async Task CallsHelloAndReturnsOk() 
+    {
 
-    var client = 
-        new CE.TestClient<Web.Sample.Program>()
-            .GETJ("/externalApi", new { Ok = "Yeah" })
-            .GetFactory()
-            .CreateClient();
+        var client = 
+            new CE.TestWebAppFactoryBuilder<Web.Sample.Program>()
+                .GETJ("/externalApi", new { Ok = "Yeah" })
+                .GetFactory()
+                .CreateClient();
 
-    var r = await client.GetAsync("/Hello");
+        var r = await client.GetAsync("/Hello");
 
-    // rest of your tests...
-
+        // rest of your tests...
+    }
+}
 ```
 
 ### Test .NET C# 🤝 from F#

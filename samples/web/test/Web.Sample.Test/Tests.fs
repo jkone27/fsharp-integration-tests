@@ -10,7 +10,7 @@ open System.Net.Http.Json
 
 
 let webAppFactory = 
-    new TestClient<Web.Sample.Program>() 
+    new TestWebAppFactoryBuilder<Web.Sample.Program>() 
     |> fun x -> x {
         GETJ Web.Sample.Clients.Routes.name {| Name = "Peter" |}
         GETJ Web.Sample.Clients.Routes.age {| Age = 100 |}

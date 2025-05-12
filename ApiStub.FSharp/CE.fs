@@ -9,7 +9,7 @@ open Microsoft.Extensions.Http
 open Microsoft.AspNetCore.Routing.Template
 open Microsoft.AspNetCore.Routing
 
-/// computation expression module (builder CE), contains `TestClient<T>` that wraps `WebApplicationFactory<T>`
+/// computation expression module (builder CE), contains `TestWebAppFactoryBuilder` (former `TestWebAppFactoryBuilder`) that wraps `WebApplicationFactory`
 module CE =
     open BuilderExtensions
     open HttpResponseHelpers
@@ -18,8 +18,8 @@ module CE =
     let private toAsync stub =
         fun req args -> task { return stub req args }
 
-    /// `TestClient<T>` wraps `WebApplicationFactory<T>` and exposes a builder CE with utility to define api client stubs and other features
-    type TestClient<'T when 'T: not struct>() =
+    /// `TestWebAppFactoryBuilder` wraps `WebApplicationFactory` and exposes a builder CE with utility to define api client stubs and other features
+    type TestWebAppFactoryBuilder<'T when 'T: not struct>() =
 
         let factory = new WebApplicationFactory<'T>()
         let mutable httpMessageHandler: DelegatingHandler = null
@@ -82,22 +82,14 @@ module CE =
 
         [<CustomOperation("stub")>]
         member this.Stub
-            (
-                x,
-                methods,
-                routeTemplate,
-                stub: HttpRequestMessage -> RouteValueDictionary -> HttpResponseMessage
-            ) =
+            (x, methods, routeTemplate, stub: HttpRequestMessage -> RouteValueDictionary -> HttpResponseMessage)
+            =
             this.StubWithOptions(x, methods, routeTemplate, stub |> toAsync, false)
 
         [<CustomOperation("stub_async")>]
         member this.StubAsync
-            (
-                x,
-                methods,
-                routeTemplate,
-                stub: HttpRequestMessage -> RouteValueDictionary -> HttpResponseMessage Task
-            ) =
+            (x, methods, routeTemplate, stub: HttpRequestMessage -> RouteValueDictionary -> HttpResponseMessage Task)
+            =
             this.StubWithOptions(x, methods, routeTemplate, stub, false)
 
         /// stub operation with stub object (HttpResponseMessage)
@@ -232,3 +224,7 @@ module CE =
             |> web_configure_test_services (fun s ->
                 for custom_config in customConfigureTestServices do
                     custom_config (s) |> ignore)
+
+    /// `TestClient` is a type backfill for `TestWebAppFactoryBuilder`, please switch to the new name if possible
+    [<Obsolete("Use TestWebAppFactoryBuilder type instead")>]
+    type TestClient<'T when 'T: not struct> = TestWebAppFactoryBuilder<'T>
