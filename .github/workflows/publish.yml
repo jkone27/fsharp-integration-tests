@@ -64,11 +64,3 @@ jobs:
     - name: Push Package
       if: steps.versionize.outcome == 'success'
       run: dotnet nuget push ./nupkgs/*.nupkg --api-key ${{secrets.NUGET_KEY}} --skip-duplicate
-
-    - name: Push changes to GitHub
-      if: steps.versionize.outcome == 'success'
-      uses: ad-m/github-push-action@master
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        branch: main
-        tags: true
