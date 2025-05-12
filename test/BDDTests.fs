@@ -30,7 +30,7 @@ open Xunit.Abstractions
 
 module BDDTests =
 
-    let testce = new TestClient<Startup>()
+    let testce = new TestWebAppFactoryBuilder<Startup>()
 
 
     [<Fact>]
@@ -48,7 +48,7 @@ module BDDTests =
             (fun s ->
                 task {
 
-                    let test = s.TestClient
+                    let test = s.TestWAFBuilder
 
                     let f = test.GetFactory()
 

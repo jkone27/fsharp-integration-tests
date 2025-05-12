@@ -28,7 +28,7 @@ type MyOpenapi = OpenApiClientProvider<"swagger.json">
 
 type CETests() =
 
-    let testce = new CE.TestClient<Startup>()
+    let testce = new CE.TestWebAppFactoryBuilder<Startup>()
 
     interface IDisposable with
         member this.Dispose() = (testce :> IDisposable).Dispose()

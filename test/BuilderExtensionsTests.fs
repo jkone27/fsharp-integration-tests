@@ -27,9 +27,7 @@ open ApiStub.FSharp.BDD
 open HttpResponseMessageExtensions
 open Xunit.Abstractions
 
-type ISomeSingleton =
-    interface
-    end
+type ISomeSingleton = interface end
 
 type SomeSingleton(name: string) =
     class
@@ -38,7 +36,7 @@ type SomeSingleton(name: string) =
 
 type BuilderExtensionsTests(testOutput: ITestOutputHelper) =
 
-    let testce = new CE.TestClient<Startup>()
+    let testce = new CE.TestWebAppFactoryBuilder<Startup>()
 
     interface IDisposable with
         member this.Dispose() = (testce :> IDisposable).Dispose()

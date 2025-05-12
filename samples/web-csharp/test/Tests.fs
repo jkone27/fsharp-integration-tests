@@ -6,7 +6,7 @@ open ApiStub.FSharp
 open ApiStub.FSharp.CE
 open System.Net.Http.Json
 
-let ce = (new TestClient<Program>()) {
+let ce = (new TestWebAppFactoryBuilder<Program>()) {
     GETJ "persons" [{| Name = "John" ; Age = 30 |}]
 }
 

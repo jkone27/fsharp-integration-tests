@@ -13,7 +13,7 @@ module BDD =
     /// Defines a BDD scenario
     type Scenario<'TStartup when 'TStartup: not struct> =
         { UseCase: string
-          TestClient: TestClient<'TStartup> }
+          TestWAFBuilder: TestWebAppFactoryBuilder<'TStartup> }
 
     /// Defines the context propagated through the test
     type Environment<'TStartup, 'FeatureStubData when 'TStartup: not struct> =
@@ -42,9 +42,9 @@ module BDD =
 
 
     /// Scenario builder
-    let SCENARIO useCase testClient =
+    let SCENARIO useCase (builder: TestWebAppFactoryBuilder<_>) =
         { UseCase = useCase
-          TestClient = testClient }
+          TestWAFBuilder = builder }
         |> Step.Scenario
 
     /// Setup the Environment for the given scenario
@@ -152,17 +152,17 @@ module BDD =
 
 
 // [<Fact>] sample
-// let ``when i call /hello i get 'world' back with 200 ok`` (testClient: TestClient<_>) =
+// let ``when i call /hello i get 'world' back with 200 ok`` (TestWebAppFactoryBuilder: TestWebAppFactoryBuilder<_>) =
 
 //     let stubData = [ 1, 2, 3 ]
 
-//     testClient { GET "/hello" (fun _ _ -> $"hello world {stubData}" |> R_TEXT) }
+//     TestWebAppFactoryBuilder { GET "/hello" (fun _ _ -> $"hello world {stubData}" |> R_TEXT) }
 //     |> SCENARIO "when i call /hello i get 'world' back with 200 ok"
 //     |> SETUP
 //         (fun s ->
 //             task {
 
-//                 let test = s.TestClient
+//                 let test = s.TestWebAppFactoryBuilder
 
 //                 let f = test.GetFactory()
 

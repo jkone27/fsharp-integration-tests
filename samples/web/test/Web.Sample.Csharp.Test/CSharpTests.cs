@@ -13,7 +13,7 @@ public class CSharpTests
 {
     private static WebApplicationFactory<Web.Sample.Program> getWebAppFactory() =>
         // create an instance of the test client builder
-        new TestClient<Web.Sample.Program>()
+        new TestWebAppFactoryBuilder<Web.Sample.Program>()
             .GETJ(Clients.Routes.name, new { Name = "Peter" })
             .GETJ(Clients.Routes.age, new { Age = 100 })
             .GetFactory();
