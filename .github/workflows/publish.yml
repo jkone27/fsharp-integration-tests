@@ -36,6 +36,19 @@ jobs:
       run: dotnet versionize
       continue-on-error: true
 
+    - name: Push version changes
+      if: steps.versionize.outcome == 'success'
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: main
+        tags: true
+
+    # Checkout the repository again to ensure the latest changes are available
+    - name: Checkout repository after versionize
+      if: steps.versionize.outcome == 'success'
+      uses: actions/checkout@v4
+
     - name: No release required
       if: steps.versionize.outcome != 'success'
       run: echo "Skipping publishing. No release required."
@@ -51,11 +64,3 @@ jobs:
     - name: Push Package
       if: steps.versionize.outcome == 'success'
       run: dotnet nuget push ./nupkgs/*.nupkg --api-key ${{secrets.NUGET_KEY}} --skip-duplicate
-
-    - name: Push changes to GitHub
-      if: steps.versionize.outcome == 'success'
-      uses: ad-m/github-push-action@master
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        branch: main
-        tags: true
